@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Students</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="app-layout">
+        {% include "admin/_sidebar.html" %}
+
+        <main class="app-main">
+            <div class="dashboard-topbar">
+                <div class="dashboard-search">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input id="student-list-search" type="text" placeholder="Search students, roll number, or school" autocomplete="off">
+                </div>
+                <div class="topbar-actions">
+                    <a href="{{ url_for('signup') }}" class="topbar-chip"><i class="fa-solid fa-user-plus"></i> Add Student</a>
+                    <a href="{{ url_for('admin') }}" class="topbar-chip"><i class="fa-solid fa-house"></i> Dashboard</a>
+                </div>
+            </div>
+
+            <section class="dashboard-hero">
+                <div class="section-title" style="color:#fde68a;">Student Management</div>
+                <h1 style="margin:0;">Students List</h1>
+                <div class="action-row">
+                    <a href="{{ url_for('signup') }}" class="primary-link">Add Student</a>
+                    <a href="/attendance" class="secondary-link">Mark Attendance</a>
+                </div>
+            </section>
+
+            <section class="dashboard-stat-grid">
+                <article class="dashboard-stat-card">
+                    <div class="label">Total Students</div>
+                    <div class="value">{{ users|length }}</div>
+                </article>
+                <article class="dashboard-stat-card">
+                    <div class="label">Student Panel</div>
+                    <div class="value">Ready</div>
+                </article>
+            </section>
+
+            <section class="dashboard-mini-card" style="margin-top:20px;">
+                <div class="table-toolbar">
+                    <div>
+                        <div class="label">Student Reports</div>
+                        <h3>Student overview table</h3>
+                    </div>
+                    <div class="toolbar-inline">
+                        <input id="student-search" class="mini-input" type="text" placeholder="Search students">
+                        <select id="class-filter" class="mini-input" style="appearance: auto;">
+                            <option value="">All Classes</option>
+                            <option value="1">Class 1</option>
+                            <option value="2">Class 2</option>
+                            <option value="3">Class 3</option>
+                            <option value="4">Class 4</option>
+                            <option value="5">Class 5</option>
+                            <option value="6">Class 6</option>
+                            <option value="7">Class 7</option>
+                            <option value="8">Class 8</option>
+                            <option value="9">Class 9</option>
+                            <option value="10">Class 10</option>
+                            <option value="11">Class 11</option>
+                            <option value="12">Class 12</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="table-shell table-shell--scroll" style="margin-top:18px;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Roll No</th>
+                                <th>Name</th>
+                                <th>Mobile</th>
+                                <th>Enrollment No</th>
+                                <th>Blood</th>
+                                <th>School</th>
+                                <th>Class</th>
+                                <th>Attendance</th>
+                                <th>Report</th>
+                                <th>Edit</th>
+                                <th>Delete</th>
+                            </tr>
+                        </thead>
+                        <tbody id="student-table-body">
+                            {% for u in users %}
+                            <tr data-student-row data-class="{{ u.class or '' }}" data-search-text="{{ ((u.username or '') ~ ' ' ~ (u.rollno or '') ~ ' ' ~ (u.school or '') ~ ' ' ~ (u.enroll or '') ~ ' ' ~ (u.class or ''))|lower }}">
+                                <td>{{ u.id }}</td>
+                                <td>{{ u.rollno }}</td>
+                                <td>{{ u.username }}</td>
+                                <td>{{ u.mobile or '-' }}</td>
+                                <td>{{ u.enroll or '-' }}</td>
+                                <td>{{ u.blood or '-' }}</td>
+                                <td>{{ u.school or '-' }}</td>
+                                <td>{{ u.class or '-' }}</td>
+                                <td><a href="/attendance" class="btn-edit">Mark</a></td>
+                                <td><a href="/report/{{ u.id }}" class="btn-edit">View</a></td>
+                                <td><a href="/update/{{ u.id }}" class="btn-edit">Edit</a></td>
+                                <td><a href="/delete/{{ u.id }}" class="btn-delete" onclick="return confirm('Delete student?')">Delete</a></td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="12" class="empty-copy">No students added yet.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        (function () {
+            const searchInput = document.getElementById("student-search");
+            const classFilter = document.getElementById("class-filter");
+            const rows = Array.from(document.querySelectorAll("[data-student-row]"));
+
+            function filterRows() {
+                const searchQuery = (searchInput.value || "").trim().toLowerCase();
+                const selectedClass = (classFilter.value || "").trim();
+
+                rows.forEach((row) => {
+                    const text = row.dataset.searchText || "";
+                    const rowClass = row.dataset.class || "";
+
+                    const matchesSearch = !searchQuery || text.includes(searchQuery);
+                    const matchesClass = !selectedClass || rowClass === selectedClass;
+
+                    row.style.display = matchesSearch && matchesClass ? "" : "none";
+                });
+            }
+
+            if (searchInput) {
+                searchInput.addEventListener("input", filterRows);
+            }
+
+            if (classFilter) {
+                classFilter.addEventListener("change", filterRows);
+            }
+        }());
+    </script>
+</body>
+</html>

@@ -1,0 +1,80 @@
+{% set path = request.path %}
+{% set attendance_open = path in ['/attendance', '/attendance_by_class', '/manage_timetable', '/weekly_attendance'] or path.startswith('/mark_class_attendance') %}
+{% set students_open = path in ['/signup', '/list', '/students_by_class'] or path.startswith('/students_in_class') %}
+{% set teachers_open = path in ['/add_teacher', '/teachers', '/teacher_attendance'] or path.startswith('/edit_teacher') %}
+{% set class_management_open = path in ['/class_reports', '/class_subjects', '/class_timetable', '/class_notifications'] or path.startswith('/manage_class_subjects') or path.startswith('/manage_class_timetable') or path.startswith('/manage_class_notifications') %}
+<aside class="app-sidebar">
+    <div class="app-brand">
+        <div class="app-brand-badge">A</div>
+        <div>
+            <h2>Admin Desk</h2>
+            <p class="sidebar-copy">Manage students, teachers, attendance, and reports in one workspace.</p>
+        </div>
+    </div>
+
+    <nav class="sidebar-nav">
+        <a href="/admin" class="sidebar-link{% if path == '/admin' %} is-active{% endif %}">
+            <i class="fa-solid fa-chart-line"></i> Dashboard
+        </a>
+
+        <div class="sidebar-accordion">
+            <button class="accordion-btn{% if attendance_open %} active{% endif %}" onclick="toggleAccordion(this)">
+                <i class="fa-solid fa-clipboard-check"></i> Attendance & Reports
+                <i class="fa-solid fa-chevron-down accordion-arrow"></i>
+            </button>
+            <div class="accordion-content{% if attendance_open %} active{% endif %}">
+                <a href="/attendance" class="accordion-item{% if path == '/attendance' %} is-active{% endif %}"><i class="fa-solid fa-clipboard-check"></i> Attendance</a>
+                <a href="/attendance_by_class" class="accordion-item{% if path == '/attendance_by_class' or path.startswith('/mark_class_attendance') %} is-active{% endif %}"><i class="fa-solid fa-calendar-check"></i> Attendance by Class</a>
+                <a href="/manage_timetable" class="accordion-item{% if path == '/manage_timetable' %} is-active{% endif %}"><i class="fa-solid fa-calendar-days"></i> Timetable</a>
+                <a href="/weekly_attendance" class="accordion-item{% if path == '/weekly_attendance' %} is-active{% endif %}"><i class="fa-solid fa-chart-line"></i> Reports</a>
+            </div>
+        </div>
+
+        <div class="sidebar-accordion">
+            <button class="accordion-btn{% if students_open %} active{% endif %}" onclick="toggleAccordion(this)">
+                <i class="fa-solid fa-users"></i> Students
+                <i class="fa-solid fa-chevron-down accordion-arrow"></i>
+            </button>
+            <div class="accordion-content{% if students_open %} active{% endif %}">
+                <a href="/signup" class="accordion-item{% if path == '/signup' %} is-active{% endif %}"><i class="fa-solid fa-user-plus"></i> Add Student</a>
+                <a href="/list" class="accordion-item{% if path == '/list' %} is-active{% endif %}"><i class="fa-solid fa-list"></i> View All</a>
+                <a href="/students_by_class" class="accordion-item{% if path == '/students_by_class' or path.startswith('/students_in_class') %} is-active{% endif %}"><i class="fa-solid fa-layer-group"></i> By Class</a>
+            </div>
+        </div>
+
+        <div class="sidebar-accordion">
+            <button class="accordion-btn{% if teachers_open %} active{% endif %}" onclick="toggleAccordion(this)">
+                <i class="fa-solid fa-user-tie"></i> Teachers
+                <i class="fa-solid fa-chevron-down accordion-arrow"></i>
+            </button>
+            <div class="accordion-content{% if teachers_open %} active{% endif %}">
+                <a href="/add_teacher" class="accordion-item{% if path == '/add_teacher' %} is-active{% endif %}"><i class="fa-solid fa-user-plus"></i> Add Teacher</a>
+                <a href="/teachers" class="accordion-item{% if path == '/teachers' or path.startswith('/edit_teacher') %} is-active{% endif %}"><i class="fa-solid fa-list"></i> View All</a>
+                <a href="/teacher_attendance" class="accordion-item{% if path == '/teacher_attendance' %} is-active{% endif %}"><i class="fa-solid fa-clipboard-check"></i> Attendance</a>
+            </div>
+        </div>
+
+        <div class="sidebar-accordion">
+            <button class="accordion-btn{% if class_management_open %} active{% endif %}" onclick="toggleAccordion(this)">
+                <i class="fa-solid fa-layer-group"></i> Class Management
+                <i class="fa-solid fa-chevron-down accordion-arrow"></i>
+            </button>
+            <div class="accordion-content{% if class_management_open %} active{% endif %}">
+                <a href="/class_reports" class="accordion-item{% if path == '/class_reports' %} is-active{% endif %}"><i class="fa-solid fa-chart-bar"></i> Class Reports</a>
+                <a href="/class_subjects" class="accordion-item{% if path == '/class_subjects' or path.startswith('/manage_class_subjects') %} is-active{% endif %}"><i class="fa-solid fa-book"></i> Class Subjects</a>
+                <a href="/class_timetable" class="accordion-item{% if path == '/class_timetable' or path.startswith('/manage_class_timetable') %} is-active{% endif %}"><i class="fa-solid fa-calendar"></i> Class Timetable</a>
+                <a href="/class_notifications" class="accordion-item{% if path == '/class_notifications' or path.startswith('/manage_class_notifications') %} is-active{% endif %}"><i class="fa-solid fa-bell"></i> Notifications</a>
+            </div>
+        </div>
+
+        <div style="margin-top:24px; border-top:1px solid rgba(255,255,255,0.1); padding-top:20px;">
+            <a href="/logout" class="sidebar-link" style="color:#ef4444;" onclick="return confirm('Are you sure you want to logout?')">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+            </a>
+        </div>
+    </nav>
+
+    <div class="sidebar-footer">
+        Monitor classes, manage student and teacher records, track attendance, and generate comprehensive reports.
+    </div>
+</aside>

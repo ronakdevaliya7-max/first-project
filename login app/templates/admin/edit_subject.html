@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Subject</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="page-shell">
+        <div class="page-hero">
+            <div class="section-title">Subject Inventory</div>
+            <h1>Edit Subject</h1>
+            <p>Update the subject name and its course assignment using the same polished admin form layout.</p>
+            <div class="action-row">
+                <a href="/subjects" class="secondary-link">Subjects List</a>
+                <a href="/admin" class="secondary-link">Dashboard</a>
+                <a href="/logout" class="secondary-link" onclick="return confirm('Are you sure you want to logout?')">Logout</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-box">
+        <form method="post">
+            <label>Subject Name</label>
+            <input name="name" value="{{ subject.name }}" required>
+
+            <label>Course</label>
+            <select name="course" required>
+                {% for c in courses %}
+                <option value="{{ c.name }}" {% if c.name == subject.course %}selected{% endif %}>{{ c.name }}</option>
+                {% endfor %}
+            </select>
+
+            <button type="submit" style="width:100%; margin-top:24px;">Update Subject</button>
+        </form>
+    </div>
+</body>
+</html>

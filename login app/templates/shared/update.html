@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Student</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="page-shell">
+        <div class="page-hero">
+            <div class="back-button">
+                <button type="button" onclick="history.back()">Back</button>
+            </div>
+            <div class="section-title">Student Management</div>
+            <h1>Edit Student</h1>
+            <p>Update student profile details, contact data, and account information from one clean admin form.</p>
+        </div>
+
+        <div class="form-box">
+            <form method="post" enctype="multipart/form-data">
+                <div class="info-grid" style="grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));">
+                    <div>
+                        <label>Roll No</label>
+                        <input type="text" value="{{ user.rollno }}" readonly>
+                    </div>
+                    <div>
+                        <label>Name</label>
+                        <input name="username" value="{{ user.username }}" required>
+                    </div>
+                    <div>
+                        <label>Gender</label>
+                        <input name="gender" value="{{ user.gender }}">
+                    </div>
+                    <div>
+                        <label>Mobile</label>
+                        <input name="mobile" value="{{ user.mobile }}">
+                    </div>
+                    <div>
+                        <label>Enrollment No</label>
+                        <input name="enroll" value="{{ user.enroll }}">
+                    </div>
+                    <div>
+                        <label>Blood</label>
+                        <input name="blood" value="{{ user.blood }}">
+                    </div>
+                    <div>
+                        <label>School</label>
+                        <input name="school" value="{{ user.school }}">
+                    </div>
+                    <div>
+                        <label>Class</label>
+                        <select name="class">
+                            <option value="">Select Class</option>
+                            <option value="1" {% if user.class == '1' %}selected{% endif %}>Class 1</option>
+                            <option value="2" {% if user.class == '2' %}selected{% endif %}>Class 2</option>
+                            <option value="3" {% if user.class == '3' %}selected{% endif %}>Class 3</option>
+                            <option value="4" {% if user.class == '4' %}selected{% endif %}>Class 4</option>
+                            <option value="5" {% if user.class == '5' %}selected{% endif %}>Class 5</option>
+                            <option value="6" {% if user.class == '6' %}selected{% endif %}>Class 6</option>
+                            <option value="7" {% if user.class == '7' %}selected{% endif %}>Class 7</option>
+                            <option value="8" {% if user.class == '8' %}selected{% endif %}>Class 8</option>
+                            <option value="9" {% if user.class == '9' %}selected{% endif %}>Class 9</option>
+                            <option value="10" {% if user.class == '10' %}selected{% endif %}>Class 10</option>
+                            <option value="11" {% if user.class == '11' %}selected{% endif %}>Class 11</option>
+                            <option value="12" {% if user.class == '12' %}selected{% endif %}>Class 12</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Birthdate</label>
+                        <input type="date" name="birthdate" value="{{ user.birthdate }}">
+                    </div>
+                </div>
+
+                <label>Address</label>
+                <textarea name="address">{{ user.address }}</textarea>
+
+                <label>Photo</label>
+                <input type="file" name="photo">
+
+                {% if msg %}
+                <div style="margin-top:16px; padding:14px; border-radius:14px; background:#fee2e2; color:#991b1b; font-weight:700;">
+                    {{ msg }}
+                </div>
+                {% endif %}
+
+                <button type="submit" style="width:100%; margin-top:24px;">Update Student</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

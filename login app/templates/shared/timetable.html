@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weekly Timetable</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="page-shell">
+        <div class="page-hero">
+            <div class="back-button">
+                <button type="button" onclick="history.back()">Back</button>
+            </div>
+            <div class="section-title">Schedule Overview</div>
+            <h1>Weekly Timetable</h1>
+            <p>
+                Timetable starts from {{ start_date|display_date }}, runs for {{ total_days }} days,
+                covers {{ active_days }} teaching days each week, and includes {{ weekly_slots }} lecture slots.
+            </p>
+            <div class="action-row">
+                {% if is_admin_view %}
+                <a href="/manage_timetable" class="primary-link">Manage Timetable</a>
+                <a href="/generate_auto_timetable" class="secondary-link">Sync Timetable</a>
+                {% elif not is_student_view %}
+                <a href="/generate_auto_timetable" class="primary-link">Sync Timetable</a>
+                {% endif %}
+                <a href="/festivals" class="secondary-link">Festival Calendar</a>
+            </div>
+        </div>
+
+        {% include "shared/_weekly_timetable.html" %}
+    </div>
+</body>
+</html>

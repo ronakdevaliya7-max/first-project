@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Courses</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="page-shell">
+        <div class="page-hero">
+            <div class="section-title">Academic Structure</div>
+            <h1>Courses List</h1>
+            <p>Maintain course records and descriptions in the same refined admin workspace.</p>
+            <div class="action-row">
+                <a href="/admin" class="secondary-link">Dashboard</a>
+                <a href="/add_course" class="primary-link">Add Course</a>
+                <a href="/logout" class="secondary-link" onclick="return confirm('Are you sure you want to logout?')">Logout</a>
+            </div>
+        </div>
+
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-label">Total Courses</div>
+                <div class="stat-value">{{ courses|length }}</div>
+            </div>
+        </div>
+
+        <div class="table-shell">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Edit</th>
+                        <th>Delete</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in courses %}
+                    <tr>
+                        <td>{{ c.id }}</td>
+                        <td>{{ c.name }}</td>
+                        <td>{{ c.description or '-' }}</td>
+                        <td><a href="/edit_course/{{ c.id }}" class="btn-edit">Edit</a></td>
+                        <td><a href="/delete_course/{{ c.id }}" class="btn-delete" onclick="return confirm('Delete course?')">Delete</a></td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="empty-copy">No courses added yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

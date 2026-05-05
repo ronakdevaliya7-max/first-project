@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Subject</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="page-shell">
+        <div class="page-hero">
+            <div class="section-title">Subject Inventory</div>
+            <h1>Add Subject</h1>
+            <p>Create a new subject and optionally add a new course without leaving the admin design system.</p>
+            <div class="action-row">
+                <a href="/subjects" class="secondary-link">Subjects List</a>
+                <a href="/admin" class="secondary-link">Dashboard</a>
+                <a href="/logout" class="secondary-link" onclick="return confirm('Are you sure you want to logout?')">Logout</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-box">
+        <form method="post">
+            <label>Subject Name</label>
+            <input type="text" name="name" required>
+
+            <label>Course</label>
+            <select name="course">
+                <option value="">Select Existing Course</option>
+                {% for c in courses %}
+                <option value="{{ c.name }}">{{ c.name }}</option>
+                {% endfor %}
+            </select>
+
+            <label>New Course</label>
+            <input type="text" name="new_course" placeholder="New course name">
+
+            <label>Course Description</label>
+            <input type="text" name="course_description" placeholder="Optional course description">
+
+            <button type="submit" style="width:100%; margin-top:24px;">Add Subject</button>
+        </form>
+    </div>
+</body>
+</html>

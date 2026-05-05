@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Teacher</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="page-shell">
+        <div class="page-hero">
+            <div class="section-title">Faculty Management</div>
+            <h1>Add Teacher</h1>
+            <p>Create a teacher profile with linked course and subject information from the same premium admin flow.</p>
+            <div class="action-row">
+                <a href="/teachers" class="secondary-link">Teacher List</a>
+                <a href="/admin" class="secondary-link">Dashboard</a>
+                <a href="/logout" class="secondary-link" onclick="return confirm('Are you sure you want to logout?')">Logout</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-box">
+        <form method="post">
+            <div class="info-grid" style="grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));">
+                <div>
+                    <label>Name</label>
+                    <input type="text" name="name" required>
+                </div>
+                <div>
+                    <label>Email</label>
+                    <input type="email" name="email" required>
+                </div>
+                <div>
+                    <label>Mobile</label>
+                    <input type="text" name="mobile" required>
+                </div>
+                <div>
+                    <label>Username</label>
+                    <input type="text" name="username" placeholder="teacher login username">
+                </div>
+                <div>
+                    <label>Password</label>
+                    <input type="text" name="password" placeholder="teacher login password" required>
+                </div>
+                <div>
+                    <label>Course</label>
+                    <select name="course">
+                        <option value="">Select Existing Course</option>
+                        {% for c in courses %}
+                        <option value="{{ c.name }}">{{ c.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label>New Course</label>
+                    <input type="text" name="new_course" placeholder="New course name">
+                </div>
+                <div>
+                    <label>Course Description</label>
+                    <input type="text" name="course_description" placeholder="Optional description">
+                </div>
+                <div>
+                    <label>Subject</label>
+                    <select name="subject">
+                        <option value="">Select Existing Subject</option>
+                        {% for s in subjects %}
+                        <option value="{{ s.name }}">{{ s.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label>New Subject</label>
+                    <input type="text" name="new_subject" placeholder="New subject name">
+                </div>
+            </div>
+
+            {% if msg %}
+            <div style="margin-top:16px; padding:14px; border-radius:14px; background:#fee2e2; color:#991b1b; font-weight:700;">
+                {{ msg }}
+            </div>
+            {% endif %}
+
+            <button type="submit" style="width:100%; margin-top:24px;">Add Teacher</button>
+        </form>
+    </div>
+</body>
+</html>

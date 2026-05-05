@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Class Subjects</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="app-layout">
+        {% include "admin/_sidebar.html" %}
+
+        <main class="app-main">
+            <section class="dashboard-hero">
+                <div class="section-title" style="color:#a78bfa;">Curriculum</div>
+                <h1 style="margin:0;">Class {{ class_num }} - Subjects</h1>
+                <p><a href="/class_subjects" style="color: #a78bfa; text-decoration: none;">← Back to Classes</a></p>
+            </section>
+
+            <!-- Add Subject Form -->
+            <section class="dashboard-mini-card" style="margin-top: 20px;">
+                <div class="table-toolbar">
+                    <div>
+                        <div class="label">Add New Subject</div>
+                        <h3>Add a subject to this class</h3>
+                    </div>
+                </div>
+
+                <form method="POST" style="margin-top: 20px; display: flex; gap: 10px;">
+                    <div style="flex: 1;">
+                        <input type="text" name="subject_name" required placeholder="Enter subject name (e.g., Mathematics, English)" style="width: 100%; padding: 12px; border: 1px solid #e5e7eb; border-radius: 4px; font-size: 14px; font-family: Poppins, sans-serif;">
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa-solid fa-plus"></i> Add Subject
+                    </button>
+                </form>
+            </section>
+
+            <!-- Subjects List -->
+            {% if subjects %}
+            <section class="dashboard-mini-card" style="margin-top: 20px;">
+                <div class="table-toolbar">
+                    <div>
+                        <div class="label">Subjects</div>
+                        <h3>{{ subjects|length }} subject{{ 's' if subjects|length != 1 else '' }} assigned</h3>
+                    </div>
+                </div>
+
+                <div class="table-shell table-shell--scroll" style="margin-top: 18px;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Subject Name</th>
+                                <th>Added On</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for subject in subjects %}
+                            <tr>
+                                <td>
+                                    <strong>{{ subject.subject_name }}</strong>
+                                </td>
+                                <td>
+                                    <span style="font-size: 12px; color: #999;">{{ subject.created_at }}</span>
+                                </td>
+                                <td>
+                                    <a href="/delete_class_subject/{{ subject.id }}" class="btn btn-delete" onclick="return confirm('Delete this subject?')">
+                                        <i class="fa-solid fa-trash"></i> Delete
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+            {% else %}
+            <div class="empty-state" style="margin-top: 40px; text-align: center; padding: 40px;">
+                <i class="fa-solid fa-book" style="font-size: 48px; color: #ccc; margin-bottom: 20px;"></i>
+                <p style="color: #999; font-size: 16px;">No subjects added yet for this class.</p>
+                <p style="color: #999; font-size: 14px;">Use the form above to add subjects.</p>
+            </div>
+            {% endif %}
+        </main>
+    </div>
+
+    <style>
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #a78bfa;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #9f7aea;
+        }
+
+        .btn-delete {
+            background: #fecaca;
+            color: #991b1b;
+            padding: 8px 12px;
+            font-size: 12px;
+        }
+
+        .btn-delete:hover {
+            background: #fca5a5;
+        }
+
+        .table-shell {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: #f9fafb;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        th {
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+            color: #666;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        tbody tr:hover {
+            background: #fafafa;
+        }
+
+        .empty-state {
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+
+        /* Accordion styles */
+        .sidebar-accordion {
+            margin-top: 10px;
+        }
+
+        .accordion-btn {
+            width: 100%;
+            padding: 12px 16px;
+            background: transparent;
+            border: none;
+            color: #d1d5db;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 15px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            border-radius: 6px;
+            font-family: Poppins, sans-serif;
+        }
+
+        .accordion-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+        }
+
+        .accordion-btn.active {
+            background: rgba(255, 165, 0, 0.15);
+            color: #ffa500;
+        }
+
+        .accordion-arrow {
+            margin-left: auto;
+            transition: transform 0.3s ease;
+            font-size: 12px;
+        }
+
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .accordion-content.active {
+            max-height: 200px;
+        }
+
+        .accordion-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 16px 10px 40px;
+            color: #d1d5db;
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            border-radius: 4px;
+        }
+
+        .accordion-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #ffa500;
+        }
+
+        .accordion-item.is-active {
+            color: #ffa500;
+            background: rgba(255, 165, 0, 0.1);
+        }
+
+        .accordion-item i {
+            font-size: 14px;
+        }
+    </style>
+
+    <script>
+        // Accordion functionality
+        function toggleAccordion(button) {
+            const content = button.nextElementSibling;
+            const arrow = button.querySelector('.accordion-arrow');
+            
+            // Close all other accordions
+            document.querySelectorAll('.accordion-content').forEach(acc => {
+                if (acc !== content) {
+                    acc.classList.remove('active');
+                    acc.previousElementSibling.classList.remove('active');
+                }
+            });
+
+            // Toggle current accordion
+            content.classList.toggle('active');
+            button.classList.toggle('active');
+            
+            if (arrow) {
+                arrow.style.transform = content.classList.contains('active') ? 'rotate(180deg)' : 'rotate(0deg)';
+            }
+        }
+    </script>
+</body>
+</html>

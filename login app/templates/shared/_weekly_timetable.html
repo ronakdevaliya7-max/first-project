@@ -1,0 +1,36 @@
+<section class="dashboard-mini-card timetable-card">
+    <div class="table-shell table-shell--scroll timetable-shell">
+        <table class="weekly-timetable-table">
+            <thead>
+                <tr>
+                    <th>No</th>
+                    <th>Time</th>
+                    {% for day in weekly_timetable.days %}
+                    <th>{{ day }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in weekly_timetable.rows %}
+                {% if row.is_break %}
+                <tr class="timetable-break-row">
+                    <td colspan="2" class="timetable-break-time"><span>{{ row.time|replace(' ', '&nbsp;')|safe }}</span></td>
+                    <td colspan="{{ weekly_timetable.days|length }}" class="timetable-break-label">Break</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td class="timetable-period">{{ row.number }}</td>
+                    <td class="timetable-time">{{ row.time }}</td>
+                    {% for day in weekly_timetable.days %}
+                    {% set course_name = row.courses.get(day, '') %}
+                    <td class="timetable-course{% if not course_name %} timetable-course--empty{% endif %}">
+                        {{ course_name or "-" }}
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>

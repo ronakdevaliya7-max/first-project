@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Students by Class</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="app-layout">
+        {% include "admin/_sidebar.html" %}
+
+        <main class="app-main">
+            <div class="dashboard-topbar">
+                <div class="dashboard-search">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" placeholder="Search by class" autocomplete="off">
+                </div>
+                <div class="topbar-actions">
+                    <a href="/admin" class="topbar-chip"><i class="fa-solid fa-house"></i> Dashboard</a>
+                </div>
+            </div>
+
+            <section class="dashboard-hero">
+                <div class="section-title" style="color:#fde68a;">Class Management</div>
+                <h1 style="margin:0;">Students by Class</h1>
+                <p>Select a class to view all students enrolled in that class.</p>
+            </section>
+
+            <section class="dashboard-grid" style="gap: 12px; margin-top: 20px;">
+                {% for item in classes_data %}
+                <a href="/students_by_class/{{ item.class_num }}" class="class-card">
+                    <div class="class-number">
+                        <i class="fa-solid fa-book"></i>
+                        <h2>Class {{ item.class_num }}</h2>
+                    </div>
+                    <div class="class-info">
+                        <div class="class-stat">
+                            <div class="stat-label">Students</div>
+                            <div class="stat-value">{{ item.count }}</div>
+                        </div>
+                    </div>
+                </a>
+                {% endfor %}
+            </section>
+        </main>
+    </div>
+
+    <style>
+        .class-card {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            min-height: 140px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .class-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+        }
+
+        .class-number {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .class-number i {
+            font-size: 24px;
+        }
+
+        .class-number h2 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .class-info {
+            display: flex;
+            gap: 16px;
+        }
+
+        .class-stat {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.8;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)) !important;
+            }
+        }
+    </style>
+</body>
+</html>

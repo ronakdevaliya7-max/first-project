@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Attendance Management System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="landing-page">
+    <div class="hero-shell landing-shell">
+        <div class="hero-banner landing-banner">
+            <div class="hero-grid landing-grid">
+                <div class="landing-main">
+                    <div class="landing-scene">
+                        <div class="landing-glow landing-glow--one"></div>
+                        <div class="landing-glow landing-glow--two"></div>
+                        <div class="landing-scene-card">
+                            <div class="landing-scene-top">
+                                <span class="landing-scene-kicker">Teacher Cockpit</span>
+                                <span class="landing-scene-status"><i class="fa-solid fa-wave-square"></i> Focused Flow</span>
+                            </div>
+                            <div class="landing-route">
+                                <div class="landing-route-stop landing-route-stop--active">
+                                    <span>01</span>
+                                    <strong>{{ latest_lecture_name }}</strong>
+                                </div>
+                                <div class="landing-route-line"></div>
+                                <div class="landing-route-stop">
+                                    <span>02</span>
+                                    <strong>{{ today_classes }} Classes Today</strong>
+                                </div>
+                                <div class="landing-route-line"></div>
+                                <div class="landing-route-stop">
+                                    <span>03</span>
+                                    <strong>{{ weekly_entries }} Weekly Entries</strong>
+                                </div>
+                            </div>
+                            <div class="landing-scene-metrics">
+                                <div class="landing-scene-metric">
+                                    <strong>{{ teacher_count }}</strong>
+                                    <span>teachers active</span>
+                                </div>
+                                <div class="landing-scene-metric">
+                                    <strong>{{ course_count }}</strong>
+                                    <span>courses ready</span>
+                                </div>
+                                <div class="landing-scene-metric">
+                                    <strong>{{ timetable_day_count }}D</strong>
+                                    <span>schedule visibility</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="eyebrow"><i class="fa-solid fa-sparkles"></i> Live Attendance Portal Snapshot</div>
+                    <h1>Teacher attendance and lecture work in one focused panel.</h1>
+                    <p>Track {{ student_count }} students, manage {{ teacher_count }} teachers, review {{ weekly_entries }} recent lecture entries, and follow the latest lecture slot at {{ latest_lecture_time }} from one clean workspace.</p>
+                    <div class="hero-chip-row landing-chip-row">
+                        <span class="hero-chip">Teacher Panel</span>
+                        <span class="hero-chip">Lecture Attendance</span>
+                        <span class="hero-chip">Daily Attendance</span>
+                        <span class="hero-chip">Weekly Report</span>
+                        <span class="hero-chip">Timetable Ready</span>
+                    </div>
+                    <div class="action-row landing-action-row">
+                        <a href="/admin_login" class="primary-link"><i class="fa-solid fa-user-shield"></i> Open Admin Panel</a>
+                        <a href="/teacher_login" class="secondary-link"><i class="fa-solid fa-chalkboard-user"></i> Enter Teacher Panel</a>
+                        <a href="/student_login" class="secondary-link"><i class="fa-solid fa-user-graduate"></i> Enter Student Panel</a>
+                    </div>
+                    <div class="hero-stat-grid landing-stat-grid">
+                        <div class="hero-stat">
+                            <strong>{{ open_modules }}</strong>
+                            <span>admin modules</span>
+                        </div>
+                        <div class="hero-stat">
+                            <strong>{{ today_classes }}</strong>
+                            <span>classes today</span>
+                        </div>
+                        <div class="hero-stat">
+                            <strong>{{ reports_ready }}</strong>
+                            <span>reports ready</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="landing-side">
+                    <div class="landing-side-head">
+                        <div class="landing-side-label">Portal Access</div>
+                        <h2>Choose the right panel and continue in one click.</h2>
+                    </div>
+                    <div class="feature-grid landing-feature-grid">
+                        <div class="feature-card portal-card portal-card--admin">
+                            <div class="portal-card-head">
+                                <strong><i class="fa-solid fa-user-shield"></i> Admin</strong>
+                                <a href="/admin_login" class="portal-accent-chip">{{ reports_ready }} Records</a>
+                            </div>
+                            <p>Create subjects, courses, teachers, and students with direct control over records and reports.</p>
+                            <div class="portal-badge-row">
+                                <a href="/courses" class="portal-badge">Courses {{ course_count }}</a>
+                                <a href="/teachers" class="portal-badge">Teachers {{ teacher_count }}</a>
+                                <a href="/weekly_attendance" class="portal-badge">Reports {{ reports_ready }}</a>
+                            </div>
+                            <div class="action-row">
+                                <a href="/admin_login" class="primary-link">Admin Login</a>
+                                <a href="/signup?role=admin" class="secondary-link">Admin Signup</a>
+                            </div>
+                        </div>
+                        <div class="feature-card portal-card portal-card--teacher">
+                            <div class="portal-card-head">
+                                <strong><i class="fa-solid fa-chalkboard-user"></i> Teacher</strong>
+                                <a href="/teacher_login" class="portal-accent-chip">{{ lecture_count }} Lectures</a>
+                            </div>
+                            <p>Track lectures, mark attendance, and review weekly activity from one focused workspace.</p>
+                            <div class="portal-badge-row">
+                                <a href="/lecture_attendance" class="portal-badge">Lectures {{ lecture_count }}</a>
+                                <a href="/attendance" class="portal-badge">Daily {{ today_classes }}</a>
+                                <a href="/weekly_attendance" class="portal-badge">Weekly {{ weekly_entries }}</a>
+                            </div>
+                            <div class="action-row">
+                                <a href="/teacher_login" class="primary-link">Teacher Login</a>
+                                <a href="/signup?role=teacher" class="secondary-link">Teacher Signup</a>
+                            </div>
+                        </div>
+                        <div class="feature-card portal-card portal-card--student">
+                            <div class="portal-card-head">
+                                <strong><i class="fa-solid fa-user-graduate"></i> Student</strong>
+                                <a href="/student_login" class="portal-accent-chip">{{ student_count }} Students</a>
+                            </div>
+                            <p>View attendance, reports, and academic schedule in a cleaner premium experience.</p>
+                            <div class="portal-badge-row">
+                                <a href="/student_login" class="portal-badge">Attendance {{ student_count }}</a>
+                                <a href="/student_leave" class="portal-badge">Leave {{ pending_leave_count }}</a>
+                                <a href="/timetable" class="portal-badge">Timetable {{ timetable_day_count }}D</a>
+                            </div>
+                            <div class="action-row">
+                                <a href="/student_login" class="primary-link">Student Login</a>
+                                <a href="/signup?role=student" class="secondary-link">Student Signup</a>
+                            </div>
+                        </div>
+                        <div class="feature-card portal-card portal-card--support">
+                            <div class="portal-card-head">
+                                <strong><i class="fa-solid fa-life-ring"></i> Support</strong>
+                                <a href="/forgot_password?role=student" class="portal-accent-chip">{{ pending_leave_count }} Pending</a>
+                            </div>
+                            <p>Reset your password and return to the system without leaving the portal flow.</p>
+                            <div class="portal-badge-row">
+                                <a href="/forgot_password?role=student" class="portal-badge">Student Reset</a>
+                                <a href="/forgot_password?role=admin" class="portal-badge">Admin Reset</a>
+                                <a href="/forgot_password?role=teacher" class="portal-badge">Teacher Reset</a>
+                            </div>
+                            <div class="action-row">
+                                <a href="/forgot_password?role=student" class="secondary-link">Student Reset</a>
+                                <a href="/forgot_password?role=admin" class="secondary-link">Admin Reset</a>
+                                <a href="/forgot_password?role=teacher" class="secondary-link">Teacher Reset</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

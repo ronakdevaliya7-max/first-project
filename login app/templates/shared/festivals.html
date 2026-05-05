@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Festival Calendar</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="page-shell">
+    <div class="page-hero">
+        <div class="back-button">
+            <button type="button" onclick="history.back()">Back</button>
+        </div>
+        <div class="section-title">Holiday Planning</div>
+        <h1>Festival Calendar</h1>
+        <p>
+            Track {{ total_festivals }} festival dates across {{ holiday_type_count }} holiday categories.
+            {% if next_festival %}
+            Next holiday is {{ next_festival["name"] }} on {{ next_festival["festival_date"]|display_date }}.
+            {% endif %}
+        </p>
+        <div class="action-row">
+            <a href="/timetable" class="primary-link">View Timetable</a>
+            {% if not is_student_view %}
+            <a href="/lecture_attendance" class="secondary-link">Lecture Attendance</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="table-shell">
+        <table>
+            <tr>
+                <th>Date</th>
+                <th>Day</th>
+                <th>Festival</th>
+                <th>Holiday Type</th>
+                <th>Note</th>
+            </tr>
+
+            {% for row in data %}
+            <tr>
+                <td>{{ row["festival_date"]|display_date }}</td>
+                <td>{{ row["day"] }}</td>
+                <td>{{ row["name"] }}</td>
+                <td>{{ row["holiday_type"] }}</td>
+                <td>{{ row["note"] }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5" class="empty-copy">No festival dates available right now.</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+</div>
+
+</body>
+</html>

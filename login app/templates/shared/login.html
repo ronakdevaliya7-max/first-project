@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        {% if role == 'admin' %}Admin Login{% elif role == 'teacher' %}Teacher Login{% elif role == 'student' %}Student Login{% else %}Login{% endif %}
+    </title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="login-shell">
+        <div class="login-layout">
+            <section class="login-panel">
+                <div class="eyebrow"><i class="fa-solid fa-shield-halved"></i> Secure Access</div>
+                <h1 style="font-size:clamp(2.4rem, 4vw, 4rem); margin:18px 0 14px;">
+                    {% if role == 'admin' %}Admin{% elif role == 'teacher' %}Teacher{% elif role == 'student' %}Student{% else %}Portal{% endif %}
+                    login with a cleaner premium flow.
+                </h1>
+                <p>Sign in to continue to attendance operations, reporting, timetable planning, and role-based dashboards built around your existing Flask project.</p>
+
+                <div class="hero-chip-row">
+                    <span class="hero-chip">Role Based Access</span>
+                    <span class="hero-chip">Attendance Ready</span>
+                    <span class="hero-chip">Premium Dashboard UI</span>
+                </div>
+
+                <div class="login-points">
+                    <div class="login-point">
+                        <i class="fa-solid fa-bolt"></i>
+                        <div>
+                            <strong>Fast sign-in experience</strong>
+                            <div>Focused form layout with cleaner spacing, quick recognition, and less friction.</div>
+                        </div>
+                    </div>
+                    <div class="login-point">
+                        <i class="fa-solid fa-chart-column"></i>
+                        <div>
+                            <strong>Reports and dashboards</strong>
+                            <div>Access role-specific pages for admin control, teacher actions, and student tracking.</div>
+                        </div>
+                    </div>
+                    <div class="login-point">
+                        <i class="fa-solid fa-user-lock"></i>
+                        <div>
+                            <strong>Protected access</strong>
+                            <div>Password hashing and role validation stay in your Flask backend exactly as required.</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card login-card">
+                <div class="brand-badge" style="background:var(--gradient-soft); color:var(--primary-deep);">
+                    {% if role == 'admin' %}Admin Login{% elif role == 'teacher' %}Teacher Login{% elif role == 'student' %}Student Login{% else %}Portal Login{% endif %}
+                </div>
+                <h2 style="margin:18px 0 8px;">Welcome back</h2>
+                <p style="color:var(--muted); margin-top:0;">Enter your credentials to continue into the cleaner premium flow.</p>
+
+                <form method="post" autocomplete="off">
+                    <label>Username</label>
+                    <div class="input-icon-group">
+                        <i class="fa-regular fa-user"></i>
+                        <input type="text" name="username" placeholder="Enter username" required>
+                    </div>
+
+                    <label>Password</label>
+                    <div class="input-icon-group">
+                        <i class="fa-solid fa-lock"></i>
+                        <input type="password" id="passwordField" name="password" placeholder="Enter password" required>
+                        <button
+                            type="button"
+                            class="password-toggle"
+                            id="passwordToggle"
+                            aria-label="Show password"
+                            aria-pressed="false"
+                        >
+                            <i id="passwordIcon" class="fa-regular fa-eye"></i>
+                        </button>
+                    </div>
+
+                    <button type="submit" style="width:100%; margin-top:24px;">Continue</button>
+                </form>
+
+                {% if msg %}
+                <div style="margin-top:16px; padding:14px; border-radius:14px; background:#fee2e2; color:#991b1b; font-weight:700;">
+                    {{ msg }}
+                </div>
+                {% endif %}
+
+                <div class="action-row" style="justify-content:center; margin-top:18px;">
+                    <a href="/" class="secondary-link">Back to Home</a>
+                    {% if role == 'admin' %}
+                    <a href="/signup?role=admin" class="secondary-link">Create Account</a>
+                    {% elif role == 'teacher' %}
+                    <a href="/signup?role=teacher" class="secondary-link">Create Account</a>
+                    {% endif %}
+                    {% if role == 'admin' %}
+                    <a href="/forgot_password?role=admin" class="secondary-link">Forgot Password</a>
+                    {% elif role == 'teacher' %}
+                    <a href="/forgot_password?role=teacher" class="secondary-link">Forgot Password</a>
+                    {% elif role == 'student' %}
+                    <a href="/forgot_password?role=student" class="secondary-link">Forgot Password</a>
+                    {% else %}
+                    <a href="/forgot_password" class="secondary-link">Forgot Password</a>
+                    {% endif %}
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+    (function () {
+        const field = document.getElementById("passwordField");
+        const button = document.getElementById("passwordToggle");
+        const icon = document.getElementById("passwordIcon");
+
+        if (!field || !button || !icon) {
+            return;
+        }
+
+        button.addEventListener("click", function () {
+            const isPassword = field.type === "password";
+            field.type = isPassword ? "text" : "password";
+            icon.className = isPassword ? "fa-regular fa-eye-slash" : "fa-regular fa-eye";
+            button.setAttribute("aria-label", isPassword ? "Hide password" : "Show password");
+            button.setAttribute("aria-pressed", isPassword ? "true" : "false");
+        });
+    }());
+    </script>
+</body>
+</html>

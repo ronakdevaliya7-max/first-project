@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teachers</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="app-layout">
+        {% include "admin/_sidebar.html" %}
+
+        <main class="app-main">
+            <div class="dashboard-topbar">
+                <div class="dashboard-search">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input id="teacher-list-search" type="text" placeholder="Search teachers, username, or subject" autocomplete="off">
+                </div>
+                <div class="topbar-actions">
+                    <a href="/add_teacher" class="topbar-chip"><i class="fa-solid fa-user-plus"></i> Add Teacher</a>
+                    <a href="/teacher_attendance" class="topbar-chip"><i class="fa-regular fa-calendar-check"></i> Attendance</a>
+                </div>
+            </div>
+
+            <section class="dashboard-hero">
+                <div class="section-title" style="color:#fde68a;">Faculty Management</div>
+                <h1 style="margin:0;">Teachers List</h1>
+                <div class="action-row">
+                    <a href="/add_teacher" class="primary-link">Add Teacher</a>
+                    <a href="/teacher_attendance" class="secondary-link">Mark Attendance</a>
+                    <a href="/teacher_attendance_report" class="secondary-link">Open Report</a>
+                </div>
+            </section>
+
+            <section class="dashboard-stat-grid">
+                <article class="dashboard-stat-card">
+                    <div class="label">Total Teachers</div>
+                    <div class="value">{{ teachers|length }}</div>
+                </article>
+                <article class="dashboard-stat-card">
+                    <div class="label">Reports Ready</div>
+                    <div class="value">{{ teachers|length }}</div>
+                </article>
+                <article class="dashboard-stat-card">
+                    <div class="label">Faculty Panel</div>
+                    <div class="value">Active</div>
+                </article>
+            </section>
+
+            <section class="dashboard-mini-card" style="margin-top:20px;">
+                <div class="table-toolbar">
+                    <div>
+                        <div class="label">Teacher Reports</div>
+                        <h3>Teacher overview table</h3>
+                    </div>
+                </div>
+
+                <div class="table-shell table-shell--scroll" style="margin-top:18px;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Mobile</th>
+                                <th>Course</th>
+                                <th>Subject</th>
+                                <th>Attendance</th>
+                                <th>Report</th>
+                                <th>Edit</th>
+                                <th>Delete</th>
+                            </tr>
+                        </thead>
+                        <tbody id="teacher-table-body">
+                            {% for t in teachers %}
+                            <tr data-teacher-row data-search-text="{{ ((t.name or '') ~ ' ' ~ (t.username or '') ~ ' ' ~ (t.subject or '') ~ ' ' ~ (t.course or ''))|lower }}">
+                                <td>{{ t.id }}</td>
+                                <td>{{ t.name or '-' }}</td>
+                                <td>{{ t.username or '-' }}</td>
+                                <td>{{ t.email or '-' }}</td>
+                                <td>{{ t.mobile or '-' }}</td>
+                                <td>{{ t.course or '-' }}</td>
+                                <td>{{ t.subject or '-' }}</td>
+                                <td><a href="/teacher_attendance" class="btn-edit">Mark</a></td>
+                                <td><a href="/teacher_report/{{ t.id }}" class="btn-edit">View</a></td>
+                                <td><a href="/edit_teacher/{{ t.id }}" class="btn-edit">Edit</a></td>
+                                <td><a href="/delete_teacher/{{ t.id }}" class="btn-delete" onclick="return confirm('Delete teacher?')">Delete</a></td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="11" class="empty-copy">No teachers added yet.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        (function () {
+            const searchInput = document.getElementById("teacher-list-search");
+            const rows = Array.from(document.querySelectorAll("[data-teacher-row]"));
+
+            if (!searchInput) {
+                return;
+            }
+
+            searchInput.addEventListener("input", function () {
+                const query = (searchInput.value || "").trim().toLowerCase();
+
+                rows.forEach((row) => {
+                    const text = row.dataset.searchText || "";
+                    row.style.display = !query || text.includes(query) ? "" : "none";
+                });
+            });
+        }());
+    </script>
+</body>
+</html>

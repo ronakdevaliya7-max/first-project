@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mark Attendance - Class {{ class_num }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="app-layout">
+        {% include "admin/_sidebar.html" %}
+
+        <main class="app-main">
+            <div class="dashboard-topbar">
+                <div class="dashboard-search">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input id="student-search" class="mini-input" type="text" placeholder="Search students">
+                </div>
+                <div class="topbar-actions">
+                    <a href="/attendance_by_class" class="topbar-chip"><i class="fa-solid fa-arrow-left"></i> Back to Classes</a>
+                    <a href="/admin" class="topbar-chip"><i class="fa-solid fa-house"></i> Dashboard</a>
+                </div>
+            </div>
+
+            <section class="dashboard-hero">
+                <div class="section-title" style="color:#fde68a;">Class {{ class_num }}</div>
+                <h1 style="margin:0;">Mark Attendance - Class {{ class_num }}</h1>
+            </section>
+
+            {% if success %}
+            <div style="margin: 20px 0; padding: 16px; background: #d1fae5; border: 1px solid #6ee7b7; border-radius: 8px; color: #065f46;">
+                <strong>✅ Attendance saved successfully!</strong>
+            </div>
+            {% endif %}
+
+            <section class="dashboard-mini-card" style="margin-top:20px;">
+                <div class="form-box">
+                    <form method="post">
+                        <div style="display: flex; gap: 12px; margin-bottom: 20px;">
+                            <div>
+                                <label>Select Date</label>
+                                <input type="date" name="date" value="{{ selected_date }}" required>
+                            </div>
+                            <div style="display: flex; align-items: flex-end;">
+                                <button type="submit" style="padding: 10px 20px;">Save Attendance</button>
+                            </div>
+                        </div>
+
+                        <div class="table-shell table-shell--scroll">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Roll No</th>
+                                        <th>Name</th>
+                                        <th>Mobile</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="student-table-body">
+                                    {% for student in students %}
+                                    <tr data-student-row data-search-text="{{ ((student.username or '') ~ ' ' ~ (student.rollno or ''))|lower }}">
+                                        <td>{{ student.rollno or '-' }}</td>
+                                        <td>{{ student.username }}</td>
+                                        <td>{{ student.mobile or '-' }}</td>
+                                        <td>
+                                            <select name="status_{{ student.id }}" class="status-select" onchange="updateSelectColor(this)">
+                                                {% set current_status = attendance_map.get(student.id, 'Absent') %}
+                                                {% set is_on_leave = student.id in leave_students %}
+                                                
+                                                {% if is_on_leave %}
+                                                    <option value="Leave" selected>Leave</option>
+                                                    <option value="Present">Present</option>
+                                                    <option value="Absent">Absent</option>
+                                                {% else %}
+                                                    <option value="Present" {% if current_status == 'Present' %}selected{% endif %}>Present</option>
+                                                    <option value="Absent" {% if current_status == 'Absent' %}selected{% endif %}>Absent</option>
+                                                    <option value="Leave">Leave</option>
+                                                {% endif %}
+                                            </select>
+                                        </td>
+                                    </tr>
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="4" class="empty-copy">No students in this class.</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div style="margin-top: 20px; display: flex; gap: 12px;">
+                            <button type="submit" style="flex: 1;">Save All Attendance</button>
+                            <a href="/attendance_by_class" style="flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 6px; text-align: center; text-decoration: none; color: #333;">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <style>
+        .status-select {
+            padding: 8px 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            background: white;
+            min-width: 120px;
+            transition: all 0.2s ease;
+        }
+
+        .status-select[data-status="Present"] {
+            color: #15803d;
+            border-color: #22c55e;
+            background: #f0fdf4;
+        }
+
+        .status-select[data-status="Absent"] {
+            color: #991b1b;
+            border-color: #ef4444;
+            background: #fef2f2;
+        }
+
+        .status-select[data-status="Leave"] {
+            color: #9a3412;
+            border-color: #f97316;
+            background: #fffbeb;
+        }
+
+        .status-select option {
+            padding: 8px;
+            background: white;
+            color: black;
+            font-weight: normal;
+        }
+
+        .form-box {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .form-box label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .form-box input[type="date"] {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+    </style>
+
+    <script>
+        function updateSelectColor(selectElement) {
+            const status = selectElement.value;
+            selectElement.setAttribute('data-status', status);
+        }
+
+        (function () {
+            const searchInput = document.getElementById("student-search");
+            const rows = Array.from(document.querySelectorAll("[data-student-row]"));
+            const selects = document.querySelectorAll(".status-select");
+
+            // Initialize colors on page load
+            selects.forEach((select) => {
+                updateSelectColor(select);
+            });
+
+            if (!searchInput) {
+                return;
+            }
+
+            searchInput.addEventListener("input", function () {
+                const query = (searchInput.value || "").trim().toLowerCase();
+
+                rows.forEach((row) => {
+                    const text = row.dataset.searchText || "";
+                    row.style.display = !query || text.includes(query) ? "" : "none";
+                });
+            });
+        }());
+    </script>
+</body>
+</html>

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Course</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="page-shell">
+        <div class="page-hero">
+            <div class="section-title">Academic Structure</div>
+            <h1>Add Course</h1>
+            <p>Create a new course and description in the same admin design language as the rest of the panel.</p>
+            <div class="action-row">
+                <a href="/courses" class="secondary-link">Courses List</a>
+                <a href="/admin" class="secondary-link">Dashboard</a>
+                <a href="/logout" class="secondary-link" onclick="return confirm('Are you sure you want to logout?')">Logout</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-box">
+        <form method="post">
+            <label>Course Name</label>
+            <input name="name" required>
+
+            <label>Description</label>
+            <textarea name="description" rows="4"></textarea>
+
+            <button type="submit" style="width:100%; margin-top:24px;">Add Course</button>
+        </form>
+    </div>
+</body>
+</html>

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Student List</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="app-layout">
+        <aside class="app-sidebar">
+            <div class="app-brand">
+                <div class="app-brand-badge">T</div>
+                <div>
+                    <h2>Teacher Desk</h2>
+                    <p class="sidebar-copy">View student lists, class groups, and attendance-related student details.</p>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="/teacher" class="sidebar-link"><i class="fa-solid fa-chart-line"></i> Dashboard</a>
+
+                <div class="sidebar-accordion">
+                    <button class="accordion-btn" onclick="toggleAccordion(this)">
+                        <i class="fa-solid fa-clipboard-check"></i> Attendance & Reports
+                        <i class="fa-solid fa-chevron-down accordion-arrow"></i>
+                    </button>
+                    <div class="accordion-content">
+                        <a href="/lecture_attendance" class="accordion-item"><i class="fa-solid fa-clipboard-check"></i> Lecture Attendance</a>
+                        <a href="/attendance" class="accordion-item"><i class="fa-solid fa-users-viewfinder"></i> Daily Attendance</a>
+                        <a href="/attendance_by_class" class="accordion-item"><i class="fa-solid fa-calendar-check"></i> Attendance by Class</a>
+                        <a href="/weekly_attendance" class="accordion-item"><i class="fa-solid fa-chart-pie"></i> Weekly Report</a>
+                        <a href="/teacher_attendance_report" class="accordion-item"><i class="fa-solid fa-user-check"></i> Teacher Report</a>
+                    </div>
+                </div>
+
+                <div class="sidebar-accordion">
+                    <button class="accordion-btn active" onclick="toggleAccordion(this)">
+                        <i class="fa-solid fa-users"></i> Students
+                        <i class="fa-solid fa-chevron-down accordion-arrow" style="transform: rotate(180deg);"></i>
+                    </button>
+                    <div class="accordion-content active">
+                        <a href="/teacher_students" class="accordion-item is-active"><i class="fa-solid fa-list"></i> Student List</a>
+                        <a href="/teacher_students_by_class" class="accordion-item"><i class="fa-solid fa-layer-group"></i> Class Wise</a>
+                    </div>
+                </div>
+
+                <div class="sidebar-accordion">
+                    <button class="accordion-btn" onclick="toggleAccordion(this)">
+                        <i class="fa-solid fa-layer-group"></i> Class Management
+                        <i class="fa-solid fa-chevron-down accordion-arrow"></i>
+                    </button>
+                    <div class="accordion-content">
+                        <a href="/teacher_class_reports" class="accordion-item"><i class="fa-solid fa-chart-bar"></i> Class Reports</a>
+                        <a href="/teacher_notifications" class="accordion-item"><i class="fa-solid fa-bell"></i> Notifications</a>
+                        <a href="/timetable" class="accordion-item"><i class="fa-solid fa-calendar-days"></i> Timetable</a>
+                    </div>
+                </div>
+
+                <a href="/logout" class="sidebar-link" onclick="return confirm('Are you sure you want to logout?')"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+            </nav>
+        </aside>
+
+        <main class="app-main">
+            <div class="dashboard-topbar">
+                <div class="dashboard-search">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input id="teacher-student-search" type="text" placeholder="Search student, class, or roll no" autocomplete="off">
+                </div>
+                <div class="topbar-actions">
+                    <a href="/teacher_students_by_class" class="topbar-chip"><i class="fa-solid fa-layer-group"></i> Class Wise</a>
+                    <a href="/teacher" class="topbar-chip"><i class="fa-solid fa-house"></i> Dashboard</a>
+                </div>
+            </div>
+
+            <section class="dashboard-hero">
+                <div class="section-title" style="color:#fde68a;">Students</div>
+                <h1 style="margin:0;">Student List</h1>
+                <p>Open student reports quickly and check class details before marking attendance.</p>
+            </section>
+
+            <section class="dashboard-stat-grid">
+                <article class="dashboard-stat-card">
+                    <div class="label">Total Students</div>
+                    <div class="value">{{ users|length }}</div>
+                </article>
+                <a href="/teacher_students_by_class" class="dashboard-stat-card">
+                    <div class="label">Browse by Class</div>
+                    <div class="value">12</div>
+                </a>
+            </section>
+
+            <section class="dashboard-mini-card" style="margin-top:20px;">
+                <div class="table-toolbar">
+                    <div>
+                        <div class="label">Student Directory</div>
+                        <h3>All students</h3>
+                    </div>
+                </div>
+
+                <div class="table-shell table-shell--scroll" style="margin-top:18px;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Roll No</th>
+                                <th>Name</th>
+                                <th>Class</th>
+                                <th>Mobile</th>
+                                <th>Report</th>
+                            </tr>
+                        </thead>
+                        <tbody id="teacher-student-table-body">
+                            {% for user in users %}
+                            <tr data-student-row data-search-text="{{ ((user.username or '') ~ ' ' ~ (user.rollno or '') ~ ' ' ~ (user.class or '') ~ ' ' ~ (user.mobile or ''))|lower }}">
+                                <td>{{ user.id }}</td>
+                                <td>{{ user.rollno or '-' }}</td>
+                                <td>{{ user.username }}</td>
+                                <td>{{ user.class or '-' }}</td>
+                                <td>{{ user.mobile or '-' }}</td>
+                                <td><a href="/report/{{ user.id }}" class="btn-edit">View</a></td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="6" class="empty-copy">No students found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        (function () {
+            const searchInput = document.getElementById("teacher-student-search");
+            const rows = Array.from(document.querySelectorAll("[data-student-row]"));
+
+            if (!searchInput) {
+                return;
+            }
+
+            searchInput.addEventListener("input", function () {
+                const query = (searchInput.value || "").trim().toLowerCase();
+
+                rows.forEach((row) => {
+                    const text = row.dataset.searchText || "";
+                    row.style.display = !query || text.includes(query) ? "" : "none";
+                });
+            });
+        }());
+
+        function toggleAccordion(button) {
+            const content = button.nextElementSibling;
+            const isActive = content.classList.contains('active');
+
+            document.querySelectorAll('.accordion-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.accordion-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.accordion-arrow').forEach(a => a.style.transform = 'rotate(0deg)');
+
+            if (!isActive) {
+                content.classList.add('active');
+                button.classList.add('active');
+                button.querySelector('.accordion-arrow').style.transform = 'rotate(180deg)';
+            }
+        }
+    </script>
+</body>
+</html>

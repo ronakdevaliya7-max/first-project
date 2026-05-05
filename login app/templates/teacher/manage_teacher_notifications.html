@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Notifications - Class {{ class_num }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="app-layout">
+        <aside class="app-sidebar">
+            <div class="app-brand">
+                <div class="app-brand-badge">T</div>
+                <div>
+                    <h2>Teacher Desk</h2>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="/teacher" class="sidebar-link"><i class="fa-solid fa-house"></i> Dashboard</a>
+                
+                <!-- Attendance & Reporting Accordion -->
+                <div class="sidebar-accordion">
+                    <button class="accordion-btn" onclick="toggleAccordion(this)">
+                        <i class="fa-solid fa-clipboard-check"></i> Attendance & Reports
+                        <i class="fa-solid fa-chevron-down accordion-arrow"></i>
+                    </button>
+                    <div class="accordion-content">
+                        <a href="/lecture_attendance" class="accordion-item"><i class="fa-solid fa-clipboard-check"></i> Lecture Attendance</a>
+                        <a href="/attendance" class="accordion-item"><i class="fa-solid fa-users-viewfinder"></i> Daily Attendance</a>
+                        <a href="/attendance_by_class" class="accordion-item"><i class="fa-solid fa-calendar-check"></i> Attendance by Class</a>
+                        <a href="/weekly_attendance" class="accordion-item"><i class="fa-solid fa-chart-pie"></i> Weekly Report</a>
+                        <a href="/teacher_attendance_report" class="accordion-item"><i class="fa-solid fa-user-check"></i> Teacher Report</a>
+                    </div>
+                </div>
+
+                <div class="sidebar-accordion">
+                    <button class="accordion-btn" onclick="toggleAccordion(this)">
+                        <i class="fa-solid fa-users"></i> Students
+                        <i class="fa-solid fa-chevron-down accordion-arrow"></i>
+                    </button>
+                    <div class="accordion-content">
+                        <a href="/teacher_students" class="accordion-item"><i class="fa-solid fa-list"></i> Student List</a>
+                        <a href="/teacher_students_by_class" class="accordion-item"><i class="fa-solid fa-layer-group"></i> Class Wise</a>
+                    </div>
+                </div>
+
+                <!-- Class Management Accordion -->
+                <div class="sidebar-accordion">
+                    <button class="accordion-btn" onclick="toggleAccordion(this)">
+                        <i class="fa-solid fa-layer-group"></i> Class Management
+                        <i class="fa-solid fa-chevron-down accordion-arrow"></i>
+                    </button>
+                    <div class="accordion-content active">
+                        <a href="/teacher_class_reports" class="accordion-item"><i class="fa-solid fa-chart-bar"></i> Class Reports</a>
+                        <a href="/teacher_notifications" class="accordion-item is-active"><i class="fa-solid fa-bell"></i> Notifications</a>
+                        <a href="/timetable" class="accordion-item"><i class="fa-solid fa-calendar-days"></i> Timetable</a>
+                    </div>
+                </div>
+
+                <a href="/logout" class="sidebar-link" onclick="return confirm('Are you sure you want to logout?')"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+            </nav>
+
+        </aside>
+
+        <main class="app-main">
+            <div class="dashboard-topbar">
+                <div class="dashboard-search">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" placeholder="Search notifications..." id="search-input" autocomplete="off">
+                </div>
+                <div class="topbar-actions">
+                    <a href="/teacher_notifications" class="topbar-chip"><i class="fa-solid fa-arrow-left"></i> Back</a>
+                </div>
+            </div>
+
+            <section class="dashboard-hero" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <div class="section-title" style="color: #fde68a;">Class {{ class_num }}</div>
+                <h1 style="margin: 0; color: white;">Manage Notifications</h1>
+                <p style="color: rgba(255,255,255,0.9);">Add announcements and important messages for this class.</p>
+            </section>
+
+            <section class="dashboard-mini-card">
+                <div class="table-toolbar">
+                    <div>
+                        <div class="label">Add New Notification</div>
+                        <h3>Create an announcement</h3>
+                    </div>
+                </div>
+
+                <form method="POST" style="margin-top: 20px; padding: 20px; background: #f9fafb; border-radius: 8px;">
+                    <div style="margin-bottom: 16px;">
+                        <label for="subject" style="display: block; margin-bottom: 8px; font-weight: 500;">Subject <span style="color: #ef4444;">*</span></label>
+                        <input type="text" id="subject" name="subject" placeholder="Enter notification subject" required style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-family: inherit;">
+                    </div>
+
+                    <div style="margin-bottom: 16px;">
+                        <label for="message" style="display: block; margin-bottom: 8px; font-weight: 500;">Message <span style="color: #ef4444;">*</span></label>
+                        <textarea id="message" name="message" placeholder="Enter notification message" required rows="6" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-family: inherit; resize: vertical;"></textarea>
+                    </div>
+
+                    <button type="submit" style="background-color: #3b82f6; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
+                        <i class="fa-solid fa-plus"></i> Add Notification
+                    </button>
+                </form>
+            </section>
+
+            <section class="dashboard-mini-card" style="margin-top: 20px;">
+                <div class="table-toolbar">
+                    <div>
+                        <div class="label">All Notifications</div>
+                        <h3>Notifications sent to this class</h3>
+                    </div>
+                </div>
+
+                <div class="table-shell table-shell--scroll" style="margin-top: 18px;">
+                    <table class="leave-request-table">
+                        <thead>
+                            <tr>
+                                <th>Subject</th>
+                                <th>Message</th>
+                                <th>Created By</th>
+                                <th>Created At</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for notification in notifications %}
+                            <tr>
+                                <td><strong>{{ notification.subject }}</strong></td>
+                                <td>{{ notification.message[:100] }}{% if notification.message|length > 100 %}...{% endif %}</td>
+                                <td>{{ notification.created_by }}</td>
+                                <td>{{ notification.created_at }}</td>
+                                <td>
+                                    <a href="/delete_teacher_notification/{{ notification.id }}" class="btn-delete" onclick="return confirm('Delete this notification?')">Delete</a>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="empty-copy">No notifications for this class yet.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        function toggleAccordion(button) {
+            const content = button.nextElementSibling;
+            const isActive = content.classList.contains('active');
+            
+            document.querySelectorAll('.accordion-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.accordion-arrow').forEach(a => a.style.transform = 'rotate(0deg)');
+            
+            if (!isActive) {
+                content.classList.add('active');
+                button.querySelector('.accordion-arrow').style.transform = 'rotate(180deg)';
+            }
+        }
+    </script>
+</body>
+</html>

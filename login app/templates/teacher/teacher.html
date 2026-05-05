@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="app-layout">
+        <aside class="app-sidebar">
+            <div class="app-brand">
+                <div class="app-brand-badge">T</div>
+                <div>
+                    <h2>Teacher Desk</h2>
+                    <p class="sidebar-copy">Mark attendance, manage classes, and track student performance.</p>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="/teacher" class="sidebar-link is-active">
+                    <i class="fa-solid fa-chart-line"></i> Dashboard
+                </a>
+
+                <div class="sidebar-accordion">
+                    <button class="accordion-btn active" onclick="toggleAccordion(this)">
+                        <i class="fa-solid fa-clipboard-check"></i> Attendance & Reports
+                        <i class="fa-solid fa-chevron-down accordion-arrow" style="transform: rotate(180deg);"></i>
+                    </button>
+                    <div class="accordion-content active">
+                        <a href="/lecture_attendance" class="accordion-item"><i class="fa-solid fa-clipboard-check"></i> Lecture Attendance</a>
+                        <a href="/attendance" class="accordion-item"><i class="fa-solid fa-users-viewfinder"></i> Daily Attendance</a>
+                        <a href="/attendance_by_class" class="accordion-item"><i class="fa-solid fa-calendar-check"></i> Attendance by Class</a>
+                        <a href="/weekly_attendance" class="accordion-item"><i class="fa-solid fa-chart-pie"></i> Weekly Report</a>
+                        <a href="/teacher_attendance_report" class="accordion-item"><i class="fa-solid fa-user-check"></i> Teacher Report</a>
+                    </div>
+                </div>
+
+                <div class="sidebar-accordion">
+                    <button class="accordion-btn" onclick="toggleAccordion(this)">
+                        <i class="fa-solid fa-users"></i> Students
+                        <i class="fa-solid fa-chevron-down accordion-arrow"></i>
+                    </button>
+                    <div class="accordion-content">
+                        <a href="/teacher_students" class="accordion-item"><i class="fa-solid fa-list"></i> Student List</a>
+                        <a href="/teacher_students_by_class" class="accordion-item"><i class="fa-solid fa-layer-group"></i> Class Wise</a>
+                    </div>
+                </div>
+
+                <div class="sidebar-accordion">
+                    <button class="accordion-btn" onclick="toggleAccordion(this)">
+                        <i class="fa-solid fa-layer-group"></i> Class Management
+                        <i class="fa-solid fa-chevron-down accordion-arrow"></i>
+                    </button>
+                    <div class="accordion-content">
+                        <a href="/teacher_class_reports" class="accordion-item"><i class="fa-solid fa-chart-bar"></i> Class Reports</a>
+                        <a href="/teacher_notifications" class="accordion-item"><i class="fa-solid fa-bell"></i> Notifications</a>
+                        <a href="/timetable" class="accordion-item"><i class="fa-solid fa-calendar-days"></i> Timetable</a>
+                    </div>
+                </div>
+
+                <div style="margin-top:24px; border-top:1px solid rgba(255,255,255,0.1); padding-top:20px;">
+                    <a href="/logout" class="sidebar-link" style="color:#ef4444;" onclick="return confirm('Are you sure you want to logout?')">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+                    </a>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                Track daily attendance, manage lecture sessions, monitor student performance, and access comprehensive reports.
+            </div>
+        </aside>
+
+        <main class="app-main">
+            <div class="dashboard-topbar">
+                <div class="dashboard-search">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input id="teacher-dashboard-search" type="text" placeholder="Search students or lectures" autocomplete="off">
+                    <div id="teacher-search-results" class="search-results" hidden></div>
+                </div>
+                <div class="topbar-actions">
+                    <form method="get" class="topbar-date-form">
+                        <label for="teacher-dashboard-date" class="topbar-date-label">Dashboard Date</label>
+                        <input id="teacher-dashboard-date" type="date" name="date" value="{{ selected_date }}" onchange="this.form.submit()">
+                    </form>
+                    <a href="/timetable" class="topbar-chip" data-search-target data-search-text="timetable calendar lecture schedule time table"><i class="fa-regular fa-calendar"></i> Timetable</a>
+                    <a href="/home" class="topbar-chip" data-search-target data-search-text="{{ user.username|lower }} teacher profile home account"><i class="fa-regular fa-user"></i> {{ user.username }}</a>
+                </div>
+            </div>
+
+            <section class="teacher-hero-grid">
+                <section class="dashboard-hero" data-search-target data-search-text="teacher panel welcome {{ user.username|lower }} lecture attendance daily attendance timetable weekly report">
+                    <div class="section-title" style="color:#fde68a;">Teacher Panel</div>
+                    <h1 style="margin:0;">Welcome {{ user.username }}</h1>
+                    <p>Track {{ today_classes }} classes on {{ selected_date|display_date }}, monitor {{ lecture_flow_percent }}% lecture flow, and review {{ weekly_rows }} entries from the latest 7-day window.</p>
+                    <div class="dashboard-chip-row">
+                        <span class="hero-chip"><i class="fa-solid fa-calendar-day"></i> {{ selected_date|display_date }}</span>
+                        <span class="hero-chip"><i class="fa-solid fa-wave-square"></i> {{ lecture_flow_percent }}% lecture flow</span>
+                        <span class="hero-chip"><i class="fa-solid fa-chart-column"></i> {{ weekly_rows }} weekly entries</span>
+                    </div>
+                    <div class="action-row">
+                        <a href="/lecture_attendance" class="primary-link">Mark Lecture Attendance</a>
+                        <a href="/attendance" class="secondary-link">Daily Attendance</a>
+                        <a href="/teacher_attendance_report" class="secondary-link">Teacher Report</a>
+                        <a href="/timetable" class="secondary-link">Open Timetable</a>
+                    </div>
+                </section>
+
+                <aside class="teacher-side-stack">
+                    <section class="teacher-side-card teacher-side-card--dark" data-search-target data-search-text="teacher summary students leave classes weekly report">
+                        <div class="label">Live Summary</div>
+                        <h3>Today at a glance</h3>
+                        <div class="teacher-side-metrics">
+                            <div class="teacher-side-metric">
+                                <span>Students</span>
+                                <strong>{{ student_count }}</strong>
+                            </div>
+                            <div class="teacher-side-metric">
+                                <span>Pending Leaves</span>
+                                <strong>{{ pending_leave_count }}</strong>
+                            </div>
+                            <div class="teacher-side-metric">
+                                <span>Classes Today</span>
+                                <strong>{{ today_classes }}</strong>
+                            </div>
+                            <div class="teacher-side-metric">
+                                <span>Weekly Rows</span>
+                                <strong>{{ weekly_rows }}</strong>
+                            </div>
+                            <div class="teacher-side-metric">
+                                <span>Festivals</span>
+                                <strong>{{ upcoming_festival_count }}</strong>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="teacher-side-card" data-search-target data-search-text="today lectures schedule lecture list agenda">
+                        <div class="label">Today's Lectures</div>
+                        <h3>Lecture agenda</h3>
+                        <div class="teacher-agenda-list">
+                            {% for lecture in today_lectures %}
+                            <div class="teacher-agenda-item">
+                                <div class="teacher-agenda-icon"><i class="fa-solid fa-book-open-reader"></i></div>
+                                <div>
+                                    <strong>{{ lecture.lecture_name or 'Lecture' }}</strong>
+                                    <span>{{ lecture.time or 'Time pending' }}</span>
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="empty-copy">No lectures scheduled for {{ selected_date|display_date }} yet.</div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                </aside>
+            </section>
+
+            <section class="dashboard-stat-grid">
+                <a href="/timetable?date={{ selected_date }}" class="dashboard-stat-card" data-search-target data-search-text="today classes class schedule">
+                    <div class="label">Classes On {{ selected_date|display_date }}</div>
+                    <div class="value">{{ today_classes }}</div>
+                </a>
+                <a href="/lecture_attendance?date={{ selected_date }}" class="dashboard-stat-card" data-search-target data-search-text="lecture flow on time lecture status">
+                    <div class="label">Lecture Flow On {{ selected_date|display_date }}</div>
+                    <div class="value">{{ lecture_flow_percent }}%</div>
+                </a>
+                <a href="/weekly_attendance" class="dashboard-stat-card" data-search-target data-search-text="weekly report ready attendance report">
+                    <div class="label">Last 7 Days Till {{ selected_date|display_date }}</div>
+                    <div class="value">{{ weekly_rows }}</div>
+                </a>
+                <a href="/festivals" class="dashboard-stat-card" data-search-target data-search-text="festival holiday next festival calendar">
+                    <div class="label">Next Festival</div>
+                    <div class="value" style="font-size:22px;">{{ next_festival["name"] if next_festival else "No Festival" }}</div>
+                    <div class="meta">{{ next_festival["festival_date"]|display_date if next_festival else "No upcoming holiday" }}</div>
+                </a>
+            </section>
+
+            <section class="dashboard-grid">
+                <div class="dashboard-mini-card" data-search-target data-search-text="teaching actions lecture tracking daily attendance festival calendar">
+                    <div class="label">Teaching Actions</div>
+                    <div class="teacher-quick-grid">
+                        <a href="/lecture_attendance" class="teacher-quick-card teacher-quick-card--orange" data-search-target data-search-text="lecture tracking lecture attendance manage timetable weekly report">
+                            <div class="teacher-quick-icon"><i class="fa-solid fa-clipboard-check"></i></div>
+                            <div>
+                                <strong>Lecture Tracking</strong>
+                                <span>Open lecture-wise attendance and complete the current class flow fast.</span>
+                            </div>
+                        </a>
+                        <a href="/attendance" class="teacher-quick-card teacher-quick-card--teal" data-search-target data-search-text="daily attendance class attendance open">
+                            <div class="teacher-quick-icon"><i class="fa-solid fa-users-viewfinder"></i></div>
+                            <div>
+                                <strong>Daily Attendance</strong>
+                                <span>Mark daily attendance with the same present and absent shortcut flow.</span>
+                            </div>
+                        </a>
+                        <a href="/teacher_attendance_report" class="teacher-quick-card teacher-quick-card--navy" data-search-target data-search-text="teacher attendance report self report present absent summary">
+                            <div class="teacher-quick-icon"><i class="fa-solid fa-user-check"></i></div>
+                            <div>
+                                <strong>Teacher Report</strong>
+                                <span>Review saved teacher attendance summaries and recent records.</span>
+                            </div>
+                        </a>
+                        <a href="/festivals" class="teacher-quick-card teacher-quick-card--olive" data-search-target data-search-text="festival calendar holidays view">
+                            <div class="teacher-quick-icon"><i class="fa-solid fa-calendar-star"></i></div>
+                            <div>
+                                <strong>Festival Calendar</strong>
+                                <span>Check holiday dates before lectures, reports, and schedule updates.</span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="dashboard-mini-card" data-search-target data-search-text="weekly snapshot all batches this week lecture report">
+                    <div class="label">Weekly Snapshot</div>
+                    <div class="chart-bars" id="teacher-chart-bars">
+                        {% for item in teacher_chart.all %}
+                        <div class="chart-row">
+                            <span>{{ item.label }}</span>
+                            <div class="chart-track"><div class="chart-fill" data-width="{{ item.value }}" style="width:{{ item.value }}%;"></div></div>
+                            <strong data-chart-value>{{ item.value }}%</strong>
+                        </div>
+                        {% else %}
+                        <div class="empty-copy">No lecture attendance data available yet.</div>
+                        {% endfor %}
+                    </div>
+                    <div class="segmented-filter">
+                        <button type="button" class="segment-pill is-active" data-teacher-segment="all">All Batches</button>
+                        <button type="button" class="segment-pill" data-teacher-segment="week">This Week</button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="dashboard-mini-card" style="margin-top:20px;" data-search-target data-search-text="students student report view attendance mark student table">
+                <div class="table-toolbar">
+                    <div>
+                        <div class="label">Student Reports</div>
+                        <h3>Student overview table</h3>
+                    </div>
+                </div>
+
+                <div class="table-shell table-shell--scroll" style="margin-top:18px;">
+                    <table class="leave-request-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Roll No</th>
+                                <th>Name</th>
+                                <th>Mobile</th>
+                                <th>Enrollment No</th>
+                                <th>Blood</th>
+                                <th>School</th>
+                                <th>Class</th>
+                                <th>Attendance</th>
+                                <th>Report</th>
+                                <th>Edit</th>
+                                <th>Delete</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student in students %}
+                            <tr data-search-target data-search-row="student" data-search-text="{{ ((student.name or student.username or '') ~ ' ' ~ (student.rollno or '') ~ ' ' ~ (student.mobile or '') ~ ' ' ~ (student.enroll or '') ~ ' ' ~ (student.school or '') ~ ' ' ~ (student.class or '') ~ ' student report attendance mark view edit delete')|lower }}">
+                                <td>{{ student.id }}</td>
+                                <td>{{ student.rollno or '-' }}</td>
+                                <td>{{ student.name or student.username }}</td>
+                                <td>{{ student.mobile or '-' }}</td>
+                                <td>{{ student.enroll or '-' }}</td>
+                                <td>{{ student.blood or '-' }}</td>
+                                <td>{{ student.school or '-' }}</td>
+                                <td>{{ student.class or '-' }}</td>
+                                <td><a href="/attendance" class="btn-edit">Mark</a></td>
+                                <td><a href="/report/{{ student.id }}" class="btn-edit">View</a></td>
+                                <td><a href="/update/{{ student.id }}" class="btn-edit">Edit</a></td>
+                                <td><a href="/delete/{{ student.id }}" class="btn-delete" onclick="return confirm('Delete student?')">Delete</a></td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="12" class="empty-copy">No students available right now.</td>
+                            </tr>
+                            {% endfor %}
+                            <tr data-search-empty="student" hidden>
+                                <td colspan="12" class="empty-copy">No students match this search.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="dashboard-mini-card" style="margin-top:20px;" data-search-target data-search-text="student leave approval approve reject leave requests">
+                <div class="table-toolbar">
+                    <div>
+                        <div class="label">Leave Approvals</div>
+                        <h3>Student leave requests</h3>
+                    </div>
+                </div>
+
+                <div class="table-shell table-shell--scroll" style="margin-top:18px;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Student</th>
+                                <th>Roll No</th>
+                                <th>Enrollment</th>
+                                <th>Kind</th>
+                                <th>Type</th>
+                                <th>From</th>
+                                <th>To</th>
+                                <th>Remarks</th>
+                                <th>Status</th>
+                                <th>Approve</th>
+                                <th>Reject</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for leave in leave_requests %}
+                            <tr data-search-target data-search-row="leave" data-search-text="{{ ((leave.username or '') ~ ' ' ~ (leave.rollno or '') ~ ' ' ~ (leave.enroll or '') ~ ' ' ~ (leave.leave_kind or '') ~ ' ' ~ (leave.leave_type or '') ~ ' ' ~ (leave.status or '') ~ ' student leave approve reject request')|lower }}">
+                                <td>{{ leave.id }}</td>
+                                <td>{{ leave.username or '-' }}</td>
+                                <td>{{ leave.rollno or '-' }}</td>
+                                <td>{{ leave.enroll or '-' }}</td>
+                                <td>{{ leave.leave_kind or '-' }}</td>
+                                <td>{{ leave.leave_type or '-' }}</td>
+                                <td>{{ leave.from_date|display_date }}</td>
+                                <td>{{ leave.to_date|display_date }}</td>
+                                <td>{{ leave.remarks or '-' }}</td>
+                                <td><span class="status-pill status-pill--{{ (leave.status or 'pending')|lower }}">{{ leave.status or 'Pending' }}</span></td>
+                                <td>
+                                    <form method="post" action="/student_leave/{{ leave.id }}/decision" class="table-action-form">
+                                        <input type="hidden" name="decision" value="approve">
+                                        <input type="hidden" name="next" value="/teacher">
+                                        <button type="submit" class="btn-edit">Approve</button>
+                                    </form>
+                                </td>
+                                <td>
+                                    <form method="post" action="/student_leave/{{ leave.id }}/decision" class="table-action-form">
+                                        <input type="hidden" name="decision" value="reject">
+                                        <input type="hidden" name="next" value="/teacher">
+                                        <button type="submit" class="btn-delete">Reject</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="12" class="empty-copy">No leave requests available right now.</td>
+                            </tr>
+                            {% endfor %}
+                            <tr data-search-empty="leave" hidden>
+                                <td colspan="12" class="empty-copy">No leave requests match this search.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            {% include "shared/_weekly_timetable.html" %}
+        </main>
+    </div>
+    <script>
+        (function () {
+            const searchInput = document.getElementById("teacher-dashboard-search");
+            const searchResults = document.getElementById("teacher-search-results");
+            const searchTargets = Array.from(document.querySelectorAll("[data-search-target]"));
+            const searchableRows = Array.from(document.querySelectorAll("[data-search-row]"));
+            const searchEmptyStates = Array.from(document.querySelectorAll("[data-search-empty]"));
+            const segmentButtons = Array.from(document.querySelectorAll("[data-teacher-segment]"));
+            const chartFills = Array.from(document.querySelectorAll(".chart-fill[data-width]"));
+            const chartValues = Array.from(document.querySelectorAll("[data-chart-value]"));
+            const searchItems = {{ search_items|tojson }};
+
+            const chartData = {{ teacher_chart|tojson }};
+
+            let visibleSearchItems = [];
+
+            function matchesQuery(text, query) {
+                if (!query) {
+                    return true;
+                }
+
+                return query.split(/\s+/).every((part) => text.includes(part));
+            }
+
+            function updateEmptyStates(query, visibleCounts) {
+                searchEmptyStates.forEach((row) => {
+                    const kind = row.dataset.searchEmpty;
+                    const hasVisibleMatch = (visibleCounts[kind] || 0) > 0;
+                    row.hidden = !query || hasVisibleMatch;
+                });
+            }
+
+            function updateSearchResults() {
+                if (!searchInput) {
+                    return;
+                }
+
+                const query = (searchInput.value || "").trim().toLowerCase();
+                let firstMatch = null;
+                const visibleCounts = {};
+
+                searchTargets.forEach((element) => {
+                    const haystack = (element.dataset.searchText || element.textContent || "").toLowerCase();
+                    const isMatch = matchesQuery(haystack, query);
+
+                    if (element.dataset.searchRow) {
+                        element.hidden = Boolean(query) && !isMatch;
+                        if (isMatch) {
+                            const kind = element.dataset.searchRow;
+                            visibleCounts[kind] = (visibleCounts[kind] || 0) + 1;
+                        }
+                    }
+
+                    element.classList.toggle("is-search-dimmed", Boolean(query) && !isMatch);
+                    element.classList.toggle("is-search-hit", Boolean(query) && isMatch);
+
+                    if (!firstMatch && isMatch && query) {
+                        firstMatch = element;
+                    }
+                });
+
+                if (firstMatch) {
+                    firstMatch.scrollIntoView({ behavior: "smooth", block: "center" });
+                }
+
+                updateEmptyStates(query, visibleCounts);
+                renderSearchDropdown(query);
+            }
+
+            function renderSearchDropdown(query) {
+                if (!searchResults) {
+                    return;
+                }
+
+                if (!query) {
+                    searchResults.hidden = true;
+                    searchResults.innerHTML = "";
+                    visibleSearchItems = [];
+                    return;
+                }
+
+                visibleSearchItems = searchItems
+                    .filter((item) => {
+                        const label = (item.label || "").toLowerCase();
+                        const meta = (item.meta || "").toLowerCase();
+                        return matchesQuery(label, query) || matchesQuery(meta, query) || matchesQuery((label + " " + meta).trim(), query);
+                    })
+                    .slice(0, 6);
+
+                if (!visibleSearchItems.length) {
+                    searchResults.hidden = false;
+                    searchResults.innerHTML = '<div class="search-result-empty">No matching student or lecture found.</div>';
+                    return;
+                }
+
+                searchResults.hidden = false;
+                searchResults.innerHTML = visibleSearchItems.map((item) => {
+                    return `
+                        <a class="search-result-item" href="${item.url}">
+                            <strong>${item.label}</strong>
+                            <span>${item.meta}</span>
+                        </a>
+                    `;
+                }).join("");
+            }
+
+            function updateChart(segment) {
+                const activeValues = chartData[segment] || chartData.all || [];
+
+                chartFills.forEach((fill, index) => {
+                    const value = (activeValues[index] && activeValues[index].value) || 0;
+                    fill.style.width = value + "%";
+                });
+
+                chartValues.forEach((label, index) => {
+                    const value = (activeValues[index] && activeValues[index].value) || 0;
+                    label.textContent = value + "%";
+                });
+
+                const chartLabels = Array.from(document.querySelectorAll("#teacher-chart-bars .chart-row span"));
+                chartLabels.forEach((label, index) => {
+                    label.textContent = (activeValues[index] && activeValues[index].label) || "-";
+                });
+
+                segmentButtons.forEach((button) => {
+                    button.classList.toggle("is-active", button.dataset.teacherSegment === segment);
+                });
+            }
+
+            if (searchInput) {
+                searchInput.addEventListener("input", updateSearchResults);
+                searchInput.addEventListener("keydown", function (event) {
+                    if (event.key === "Enter" && visibleSearchItems.length) {
+                        event.preventDefault();
+                        window.location.href = visibleSearchItems[0].url;
+                    }
+                });
+            }
+
+            segmentButtons.forEach((button) => {
+                button.addEventListener("click", function () {
+                    updateChart(button.dataset.teacherSegment);
+                });
+            });
+
+            document.addEventListener("click", function (event) {
+                if (!searchResults || !searchInput) {
+                    return;
+                }
+
+                if (!searchResults.contains(event.target) && event.target !== searchInput) {
+                    searchResults.hidden = true;
+                }
+            });
+
+            if (searchInput && searchResults) {
+                searchInput.addEventListener("focus", function () {
+                    if ((searchInput.value || "").trim()) {
+                        renderSearchDropdown((searchInput.value || "").trim().toLowerCase());
+                    }
+                });
+            }
+
+            updateChart("all");
+        }());
+
+        function toggleAccordion(button) {
+            const content = button.nextElementSibling;
+            const isActive = content.classList.contains('active');
+            
+            document.querySelectorAll('.accordion-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.accordion-arrow').forEach(a => a.style.transform = 'rotate(0deg)');
+            
+            if (!isActive) {
+                content.classList.add('active');
+                button.querySelector('.accordion-arrow').style.transform = 'rotate(180deg)';
+            }
+        }
+    </script>
+</body>
+</html>

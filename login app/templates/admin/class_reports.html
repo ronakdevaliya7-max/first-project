@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Class Reports</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="app-layout">
+        {% include "admin/_sidebar.html" %}
+
+        <main class="app-main">
+            <section class="dashboard-hero">
+                <div class="section-title" style="color:#fde68a;">Analytics</div>
+                <h1 style="margin:0;">Class-wise Attendance Reports</h1>
+                <p>View attendance statistics for each class.</p>
+            </section>
+
+            <section class="dashboard-mini-card" style="margin-top:20px;">
+                <div class="table-toolbar">
+                    <div>
+                        <div class="label">Attendance Reports</div>
+                        <h3>Class statistics table</h3>
+                    </div>
+                </div>
+
+                <div class="table-shell table-shell--scroll" style="margin-top:18px;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Class</th>
+                                <th>Students</th>
+                                <th>Present</th>
+                                <th>Absent</th>
+                                <th>Leave</th>
+                                <th>Total Records</th>
+                                <th>Percentage</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in classes_data %}
+                            <tr>
+                                <td><strong>Class {{ item.class_num }}</strong></td>
+                                <td>{{ item.students }}</td>
+                                <td><span style="color: #15803d; font-weight: 600;">{{ item.present }}</span></td>
+                                <td><span style="color: #991b1b; font-weight: 600;">{{ item.absent }}</span></td>
+                                <td><span style="color: #9a3412; font-weight: 600;">{{ item.leave }}</span></td>
+                                <td>{{ item.total }}</td>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <div style="background: #e5e7eb; height: 20px; border-radius: 10px; width: 100px; overflow: hidden;">
+                                            <div style="background: linear-gradient(90deg, #22c55e, #16a34a); height: 100%; width: {{ item.percentage }}%; border-radius: 10px;"></div>
+                                        </div>
+                                        <strong>{{ item.percentage }}%</strong>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script>
+        // Accordion functionality
+        function toggleAccordion(button) {
+            const content = button.nextElementSibling;
+            const arrow = button.querySelector('.accordion-arrow');
+            
+            // Close all other accordions
+            document.querySelectorAll('.accordion-content').forEach(acc => {
+                if (acc !== content) {
+                    acc.classList.remove('active');
+                    acc.previousElementSibling.classList.remove('active');
+                }
+            });
+
+            // Toggle current accordion
+            content.classList.toggle('active');
+            button.classList.toggle('active');
+            
+            if (arrow) {
+                arrow.style.transform = content.classList.contains('active') ? 'rotate(180deg)' : 'rotate(0deg)';
+            }
+        }
+    </script>
+    <style>
+        /* Accordion styles */
+        .sidebar-accordion {
+            margin-top: 10px;
+        }
+
+        .accordion-btn {
+            width: 100%;
+            padding: 12px 16px;
+            background: transparent;
+            border: none;
+            color: #d1d5db;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 15px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            border-radius: 6px;
+            font-family: Poppins, sans-serif;
+        }
+
+        .accordion-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+        }
+
+        .accordion-btn.active {
+            background: rgba(255, 165, 0, 0.15);
+            color: #ffa500;
+        }
+
+        .accordion-arrow {
+            margin-left: auto;
+            transition: transform 0.3s ease;
+            font-size: 12px;
+        }
+
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .accordion-content.active {
+            max-height: 200px;
+        }
+
+        .accordion-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 16px 10px 40px;
+            color: #d1d5db;
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            border-radius: 4px;
+        }
+
+        .accordion-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #ffa500;
+        }
+
+        .accordion-item.is-active {
+            color: #ffa500;
+            background: rgba(255, 165, 0, 0.1);
+        }
+
+        .accordion-item i {
+            font-size: 14px;
+        }
+    </style>
+</body>
+</html>

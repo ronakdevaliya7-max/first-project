@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Weekly Attendance</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="page-shell">
+    <div class="page-hero">
+        <div class="back-button">
+            <button type="button" onclick="history.back()">Back</button>
+        </div>
+        <div class="section-title">Attendance Analytics</div>
+        <h1>Weekly Attendance Report</h1>
+        {% if is_student_view %}
+        <p>Check your own lecture attendance summary and all lecture entries.</p>
+        {% else %}
+        <p>Track student presence, absence, and all lecture entries in one refined reporting layout.</p>
+        {% endif %}
+        <div class="action-row">
+            {% if not is_student_view %}
+            <a href="/lecture_attendance" class="primary-link">Mark Lecture Attendance</a>
+            {% endif %}
+            <a href="/weekly_attendance_download" class="primary-link">
+                {% if is_student_view %}Download My Weekly Report{% else %}Download Weekly Report{% endif %}
+            </a>
+            <a href="/timetable" class="secondary-link">Open Timetable</a>
+        </div>
+    </div>
+
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-label">{% if is_student_view %}Records Shown{% else %}Students Tracked{% endif %}</div>
+            <div class="stat-value">{{ summary|length }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Lecture Rows</div>
+            <div class="stat-value">{{ lectures|length }}</div>
+        </div>
+    </div>
+
+    <div class="table-shell">
+        <table>
+            <tr>
+                <th>Roll No</th>
+                <th>{% if is_student_view %}Name{% else %}Student{% endif %}</th>
+                <th>Present</th>
+                <th>Absent</th>
+                <th>Total Lectures</th>
+                <th>Percentage</th>
+            </tr>
+            {% for row in summary %}
+            <tr>
+                <td>{{ row["rollno"] }}</td>
+                <td>{{ row["username"] }}</td>
+                <td>{{ row["present_count"] or 0 }}</td>
+                <td>{{ row["absent_count"] or 0 }}</td>
+                <td>{{ row["total_count"] or 0 }}</td>
+                <td>
+                {% if row["total_count"] %}
+                {{ ((row["present_count"] or 0) * 100 / row["total_count"]) | round(0) }}%
+                {% else %}
+                0%
+                {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <div class="table-shell">
+        <table>
+            <tr>
+                <th>Date</th>
+                <th>Day</th>
+                <th>Subject</th>
+                <th>Time</th>
+                <th>{% if is_student_view %}Name{% else %}Student{% endif %}</th>
+                <th>Status</th>
+            </tr>
+            {% for row in lectures %}
+            <tr>
+                <td>{{ row["date"]|display_date }}</td>
+                <td>{{ row["day"] or "-" }}</td>
+                <td>{{ row["lecture_name"] or "-" }}</td>
+                <td>{{ row["time"] or "-" }}</td>
+                <td>{{ row["username"] }}</td>
+                <td>{{ row["status"] }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+</div>
+
+</body>
+</html>

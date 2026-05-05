@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="app-layout">
+        <aside class="app-sidebar">
+            <div class="app-brand">
+                <div class="app-brand-badge">S</div>
+                <div>
+                    <h2>Student Desk</h2>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="/home" class="sidebar-link is-active"><i class="fa-solid fa-house"></i> Dashboard</a>
+                <a href="/my_attendance" class="sidebar-link"><i class="fa-solid fa-chart-simple"></i> My Attendance</a>
+                <a href="/student_leave" class="sidebar-link"><i class="fa-solid fa-file-signature"></i> Leave Application</a>
+                <a href="/timetable" class="sidebar-link"><i class="fa-solid fa-calendar-days"></i> Timetable</a>
+                <a href="/weekly_attendance" class="sidebar-link"><i class="fa-solid fa-file-lines"></i> Weekly Report</a>
+                <a href="/festivals" class="sidebar-link"><i class="fa-solid fa-star"></i> Festivals</a>
+                <a href="/logout" class="sidebar-link" onclick="return confirm('Are you sure you want to logout?')"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+            </nav>
+
+        </aside>
+
+        <main class="app-main">
+            <div class="dashboard-topbar">
+                <div class="dashboard-search">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" placeholder="Search attendance, leave, or timetable">
+                </div>
+                <div class="topbar-actions">
+                    <div class="topbar-chip"><i class="fa-regular fa-id-badge"></i> {{ user.enroll or 'Pending' }}</div>
+                    <div class="topbar-chip"><i class="fa-regular fa-user"></i> {{ user.username }}</div>
+                </div>
+            </div>
+
+            <section class="dashboard-hero student-hero-shell">
+                <div class="student-hero-grid">
+                    <div>
+                        <div class="section-title" style="color:#fde68a;">Student Workspace</div>
+                        <h1 style="margin:0;">Welcome {{ user.username }}</h1>
+                        <p>Track your attendance, watch leave approvals, and stay ready for the next lectures from one student desk.</p>
+                        <div class="dashboard-chip-row">
+                            <a href="/my_attendance" class="hero-chip"><i class="fa-solid fa-check-circle"></i> {{ attendance_percent }}% attendance</a>
+                            <a href="/student_leave#history" class="hero-chip"><i class="fa-solid fa-file-signature"></i> {{ leave_request_count }} leave requests</a>
+                            <a href="/my_attendance" class="hero-chip"><i class="fa-solid fa-school"></i> {{ user.school or 'School pending' }}</a>
+                        </div>
+                        <div class="action-row">
+                            <a href="/my_attendance" class="primary-link">View My Attendance</a>
+                            <a href="/student_leave" class="secondary-link">Apply Leave</a>
+                            <a href="/timetable" class="secondary-link">Open Timetable</a>
+                            <a href="/weekly_attendance" class="secondary-link">Weekly Report</a>
+                        </div>
+                    </div>
+
+                    <aside class="student-side-stack">
+                        <article class="student-focus-card">
+                            <div class="label">Student Snapshot</div>
+                            <div class="focus-value">{{ attendance_percent }}%</div>
+                            <div class="focus-meta">
+                                <a href="/my_attendance" class="focus-meta-link"><i class="fa-solid fa-calendar-check"></i> {{ present_count }} Present</a>
+                                <a href="/student_leave#history" class="focus-meta-link"><i class="fa-solid fa-hourglass-half"></i> {{ latest_leave_status }}</a>
+                            </div>
+                        </article>
+
+                        <section class="teacher-side-card">
+                            <div class="label">Next Up</div>
+                            <h3>Upcoming lectures</h3>
+                            <div class="teacher-agenda-list">
+                                {% for lecture in upcoming_lectures %}
+                                <div class="teacher-agenda-item">
+                                    <div class="teacher-agenda-icon"><i class="fa-solid fa-book-open-reader"></i></div>
+                                    <div>
+                                        <strong>{{ lecture.lecture_name or 'Lecture' }}</strong>
+                                        <span>{{ lecture.lecture_date|display_date }} | {{ lecture.time or 'Time pending' }}</span>
+                                    </div>
+                                </div>
+                                {% else %}
+                                <div class="empty-copy">No upcoming lectures available.</div>
+                                {% endfor %}
+                            </div>
+                        </section>
+                    </aside>
+                </div>
+            </section>
+
+            <section class="dashboard-stat-grid">
+                <a href="/my_attendance" class="dashboard-stat-card">
+                    <div class="label">Attendance</div>
+                    <div class="value">{{ attendance_percent }}%</div>
+                </a>
+                <a href="/my_attendance" class="dashboard-stat-card">
+                    <div class="label">Enrollment</div>
+                    <div class="value" style="font-size:22px;">{{ user.enroll or 'Pending' }}</div>
+                </a>
+                <a href="/my_attendance" class="dashboard-stat-card">
+                    <div class="label">Present Classes</div>
+                    <div class="value">{{ present_count }}</div>
+                </a>
+                <a href="/student_leave" class="dashboard-stat-card">
+                    <div class="label">Leave Classes</div>
+                    <div class="value">{{ leave_count }}</div>
+                </a>
+                <a href="/student_leave#history" class="dashboard-stat-card">
+                    <div class="label">Leave Status</div>
+                    <div class="value" style="font-size:22px;">{{ latest_leave_status }}</div>
+                </a>
+            </section>
+
+            <section class="dashboard-grid">
+                <div class="dashboard-mini-card">
+                    {% if user.photo %}
+                    <img src="{{ url_for('uploaded', filename=user.photo) }}" class="profile-img">
+                    {% endif %}
+                    <div class="label">Quick Access</div>
+                    <div class="quick-link-grid">
+                        <a href="/my_attendance" class="quick-link-card quick-link-card--teal">
+                            <i class="fa-solid fa-chart-simple"></i>
+                            <strong>My Attendance</strong>
+                            <span>Review present, absent, and leave records from your own dashboard report.</span>
+                        </a>
+                        <a href="/student_leave" class="quick-link-card quick-link-card--orange">
+                            <i class="fa-solid fa-file-signature"></i>
+                            <strong>Leave Application</strong>
+                            <span>Apply for leave, track approvals, and keep your request history organized.</span>
+                        </a>
+                        <a href="/weekly_attendance" class="quick-link-card quick-link-card--navy">
+                            <i class="fa-solid fa-file-lines"></i>
+                            <strong>Weekly Report</strong>
+                            <span>Open the latest attendance summary and review your weekly learning flow.</span>
+                        </a>
+                        <a href="/festivals" class="quick-link-card quick-link-card--olive">
+                            <i class="fa-solid fa-star"></i>
+                            <strong>Festivals</strong>
+                            <span>Check upcoming holidays and plan classes, reports, and leave timing better.</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="dashboard-mini-card">
+                    <div class="label">Student Profile</div>
+                    <div class="profile-stack">
+                        <div class="profile-stack-item"><span>Mobile</span><strong>{{ user.mobile or '-' }}</strong></div>
+                        <div class="profile-stack-item"><span>Gender</span><strong>{{ user.gender or '-' }}</strong></div>
+                        <div class="profile-stack-item"><span>Blood Group</span><strong>{{ user.blood or '-' }}</strong></div>
+                        <div class="profile-stack-item"><span>School</span><strong>{{ user.school or '-' }}</strong></div>
+                        <div class="profile-stack-item"><span>Class</span><strong>{{ user.class or '-' }}</strong></div>
+                        <div class="profile-stack-item"><span>Birthdate</span><strong>{{ user.birthdate|display_date }}</strong></div>
+                        <div class="profile-stack-item"><span>Address</span><strong>{{ user.address or '-' }}</strong></div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="dashboard-grid" style="margin-top:20px;">
+                <div class="dashboard-mini-card">
+                    <div class="table-toolbar" style="padding:0;">
+                        <div>
+                            <div class="label">Upcoming Schedule</div>
+                            <h3>Next lectures</h3>
+                        </div>
+                    </div>
+                    <div class="mini-list">
+                        {% for lecture in upcoming_lectures %}
+                        <div class="mini-list-item">
+                            <div class="mini-list-date">{{ lecture.lecture_date|display_date }}</div>
+                            <div>
+                                <strong>{{ lecture.lecture_name or 'Lecture' }}</strong>
+                                <span>{{ lecture.time or 'Time pending' }}</span>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="empty-copy">No upcoming lectures available.</div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="dashboard-mini-card">
+                    <div class="table-toolbar" style="padding:0;">
+                        <div>
+                            <div class="label">Recent Leave Activity</div>
+                            <h3>Latest requests</h3>
+                        </div>
+                    </div>
+                    <div class="mini-list">
+                        {% for leave in recent_leaves %}
+                        <div class="mini-list-item mini-list-item--stack">
+                            <div>
+                                <strong>{{ leave.leave_kind or '-' }}</strong>
+                                <span>{{ leave.from_date|display_date }} to {{ leave.to_date|display_date }}</span>
+                            </div>
+                            <span class="status-pill status-pill--{{ (leave.status or 'pending')|lower }}">{{ leave.status or 'Pending' }}</span>
+                        </div>
+                        {% else %}
+                        <div class="empty-copy">No leave requests yet. You can apply from the dashboard.</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </section>
+
+            {% include "shared/_weekly_timetable.html" %}
+        </main>
+    </div>
+</body>
+</html>

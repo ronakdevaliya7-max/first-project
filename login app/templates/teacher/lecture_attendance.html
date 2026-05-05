@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lecture Attendance</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="page-shell">
+        <div class="page-hero">
+            <div class="back-button">
+                <button type="button" onclick="history.back()">Back</button>
+            </div>
+            <div class="section-title">Lecture Tracking</div>
+            <h1>Lecture Attendance</h1>
+            <p>Select the lecture slot and save subject-wise attendance for all students from one clean page.</p>
+            <div class="action-row">
+                <a href="/weekly_attendance" class="primary-link">Weekly Report</a>
+                <a href="/timetable" class="secondary-link">Open Timetable</a>
+            </div>
+        </div>
+
+        <div class="form-box">
+            <form method="post">
+                <label>Date</label>
+                <input
+                    type="date"
+                    name="date"
+                    value="{{ selected_date }}"
+                    onchange="const lecture = document.querySelector('[name=lecture]').value; if (this.value) { window.location='{{ url_for('lecture_attendance') }}?date=' + this.value + '&lecture=' + lecture; }"
+                    required
+                >
+
+                <label>Lecture</label>
+                <select
+                    name="lecture"
+                    onchange="const day = document.querySelector('[name=date]').value; window.location='{{ url_for('lecture_attendance') }}?date=' + day + '&lecture=' + this.value;"
+                    required
+                >
+                    {% for lecture in lectures %}
+                    <option value="{{ lecture.id }}" {% if selected_lecture_id|string == lecture.id|string %}selected{% endif %}>{{ lecture.lecture_date }} - {{ lecture.day }} - {{ lecture.lecture_name }} ({{ lecture.time }})</option>
+                    {% endfor %}
+                </select>
+
+                {% if success %}
+                <div style="margin-top:16px; padding:14px; border-radius:14px; background:#dcfce7; color:#166534; font-weight:700;">
+                    Lecture attendance saved successfully for {{ selected_date|display_date }}.
+                </div>
+                {% endif %}
+
+                <div class="table-shell" style="margin-top:20px;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Present</th>
+                                <th>Absent</th>
+                                <th>Leave</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for u in users %}
+                            {% set leave_info = leave_students.get(u.id) %}
+                            {% set is_present = lecture_attendance_map.get(u.id) == 'Present' %}
+                            <tr>
+                                <td>{{ u.username }}</td>
+                                <td>
+                                    <input
+                                        type="radio"
+                                        name="status_{{ u.id }}"
+                                        value="Present"
+                                        data-status-radio
+                                        {% if is_present %}checked{% endif %}
+                                        {% if leave_info %}disabled{% endif %}
+                                    >
+                                </td>
+                                <td>
+                                    {% if leave_info %}
+                                    -
+                                    {% else %}
+                                    <span class="status-pill {% if is_present %}status-pill--approved{% else %}status-pill--rejected{% endif %}" data-status-pill>
+                                        {% if is_present %}Present{% else %}Absent{% endif %}
+                                    </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if leave_info %}
+                                    <span class="status-pill status-pill--pending">Leave</span>
+                                    {% else %}
+                                    -
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="empty-copy">No students found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <button type="submit" style="width:100%; margin-top:24px;">Save Lecture Attendance</button>
+            </form>
+        </div>
+    </div>
+    <script>
+        document.querySelectorAll('[data-status-radio]').forEach(function (radio) {
+            radio.addEventListener('change', function () {
+                var row = radio.closest('tr');
+                if (!row) {
+                    return;
+                }
+
+                var pill = row.querySelector('[data-status-pill]');
+                if (!pill) {
+                    return;
+                }
+
+                if (radio.checked) {
+                    pill.textContent = 'Present';
+                    pill.classList.remove('status-pill--rejected');
+                    pill.classList.add('status-pill--approved');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

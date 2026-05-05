@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Class Timetable</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="app-layout">
+        {% include "admin/_sidebar.html" %}
+
+        <main class="app-main">
+            <section class="dashboard-hero">
+                <div class="section-title" style="color:#67e8f9;">Schedule</div>
+                <h1 style="margin:0;">Class Timetables</h1>
+                <p>Manage schedules for each class.</p>
+            </section>
+
+            <div class="mini-card-grid" style="margin-top: 20px;">
+                {% for class_data in classes_data %}
+                <a href="/class_timetable/{{ class_data.class_num }}" class="mini-card" style="text-decoration: none; color: inherit;">
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                        <div>
+                            <div class="label">Class {{ class_data.class_num }}</div>
+                            <div style="font-size: 28px; font-weight: 700; margin: 8px 0;">{{ class_data.timetable_count }}</div>
+                            <div class="label" style="color: #999;">Periods</div>
+                        </div>
+                        <i class="fa-solid fa-arrow-right" style="font-size: 20px; color: #67e8f9;"></i>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </main>
+    </div>
+
+    <style>
+        .mini-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s;
+            padding: 20px;
+            cursor: pointer;
+        }
+
+        .mini-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border-color: #67e8f9;
+        }
+
+        .mini-card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .label {
+            font-size: 12px;
+            color: #999;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        /* Accordion styles */
+        .sidebar-accordion {
+            margin-top: 10px;
+        }
+
+        .accordion-btn {
+            width: 100%;
+            padding: 12px 16px;
+            background: transparent;
+            border: none;
+            color: #d1d5db;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 15px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            border-radius: 6px;
+            font-family: Poppins, sans-serif;
+        }
+
+        .accordion-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+        }
+
+        .accordion-btn.active {
+            background: rgba(255, 165, 0, 0.15);
+            color: #ffa500;
+        }
+
+        .accordion-arrow {
+            margin-left: auto;
+            transition: transform 0.3s ease;
+            font-size: 12px;
+        }
+
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .accordion-content.active {
+            max-height: 200px;
+        }
+
+        .accordion-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 16px 10px 40px;
+            color: #d1d5db;
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            border-radius: 4px;
+        }
+
+        .accordion-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #ffa500;
+        }
+
+        .accordion-item.is-active {
+            color: #ffa500;
+            background: rgba(255, 165, 0, 0.1);
+        }
+
+        .accordion-item i {
+            font-size: 14px;
+        }
+    </style>
+    <script>
+        // Accordion functionality
+        function toggleAccordion(button) {
+            const content = button.nextElementSibling;
+            const arrow = button.querySelector('.accordion-arrow');
+            
+            // Close all other accordions
+            document.querySelectorAll('.accordion-content').forEach(acc => {
+                if (acc !== content) {
+                    acc.classList.remove('active');
+                    acc.previousElementSibling.classList.remove('active');
+                }
+            });
+
+            // Toggle current accordion
+            content.classList.toggle('active');
+            button.classList.toggle('active');
+            
+            if (arrow) {
+                arrow.style.transform = content.classList.contains('active') ? 'rotate(180deg)' : 'rotate(0deg)';
+            }
+        }
+    </script>
+</body>
+</html>

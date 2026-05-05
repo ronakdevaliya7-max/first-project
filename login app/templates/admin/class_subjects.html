@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Class Subjects</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="app-layout">
+        {% include "admin/_sidebar.html" %}
+
+        <main class="app-main">
+            <section class="dashboard-hero">
+                <div class="section-title" style="color:#a78bfa;">Curriculum</div>
+                <h1 style="margin:0;">Manage Class Subjects</h1>
+                <p>Add or remove subjects for each class.</p>
+            </section>
+
+            <div class="mini-card-grid" style="margin-top:20px;">
+                {% for class_data in classes_data %}
+                <a href="/manage_class_subjects/{{ class_data.class_num }}" class="mini-card" style="text-decoration:none; color:inherit;">
+                    <div style="display:flex; justify-content:space-between; align-items:start; gap:12px;">
+                        <div>
+                            <div class="label">Class {{ class_data.class_num }}</div>
+                            <div style="font-size:28px; font-weight:700; margin:8px 0;">{{ class_data.subject_count }}</div>
+                            <div class="label" style="color:#999;">Subjects</div>
+                        </div>
+                        <i class="fa-solid fa-arrow-right" style="font-size:20px; color:#a78bfa;"></i>
+                    </div>
+                    <div style="margin-top:12px; font-size:12px; color:#666;">
+                        {% if class_data.subject_count > 0 %}
+                            {{ ', '.join(class_data.subjects[:3]) }}{% if class_data.subject_count > 3 %}, +{{ class_data.subject_count - 3 }} more{% endif %}
+                        {% else %}
+                            <em>No subjects added</em>
+                        {% endif %}
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </main>
+    </div>
+
+    <style>
+        .mini-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s;
+            padding: 20px;
+            cursor: pointer;
+        }
+
+        .mini-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border-color: #a78bfa;
+        }
+
+        .mini-card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .label {
+            font-size: 12px;
+            color: #999;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+    </style>
+
+    <script>
+        function toggleAccordion(button) {
+            const content = button.nextElementSibling;
+
+            document.querySelectorAll('.accordion-content').forEach((panel) => {
+                if (panel !== content) {
+                    panel.classList.remove('active');
+                    panel.previousElementSibling.classList.remove('active');
+                }
+            });
+
+            content.classList.toggle('active');
+            button.classList.toggle('active');
+        }
+    </script>
+</body>
+</html>

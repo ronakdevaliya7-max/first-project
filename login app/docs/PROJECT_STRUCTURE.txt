@@ -1,0 +1,78 @@
+Project: login app
+
+Root
+- app.py
+- users.db
+- database.db
+- README.md
+- requirements.txt
+- .gitignore
+
+static/
+- style.css
+
+templates/
+- admin/
+- shared/
+- student/
+- teacher/
+
+templates/admin/
+- add_course.html
+- add_subject.html
+- add_teacher.html
+- admin.html
+- courses.html
+- edit_course.html
+- edit_subject.html
+- edit_teacher.html
+- manage_timetable.html
+- subjects.html
+- teachers.html
+- teacher_attendance.html
+- teacher_attendance_report.html
+
+templates/shared/
+- _weekly_timetable.html
+- day.html
+- festivals.html
+- forgot_password.html
+- index.html
+- login.html
+- report.html
+- signup.html
+- timetable.html
+- update.html
+- weekly_attendance.html
+
+templates/student/
+- home.html
+- student_leave.html
+
+templates/teacher/
+- attendance.html
+- lecture_attendance.html
+- teacher.html
+
+tests/
+- test_app.py
+
+uploads/
+- user-uploaded images and screenshots currently stored by the app
+
+docs/
+- PROJECT_STRUCTURE.txt
+- TESTING_CHECKLIST.md
+- update.txt
+
+Safe Cleanup Done
+- Removed root __pycache__/
+- Removed tests/__pycache__/
+- Moved project docs into docs/
+- Grouped templates into admin/shared/student/teacher folders
+
+Retained For Safety
+- users.db: active app database used by app.py
+- uploads/: app-uploaded files and screenshots
+- database.db: not currently used by app.py, but retained to avoid deleting possible old data
+- docs/* / README.md: project documents

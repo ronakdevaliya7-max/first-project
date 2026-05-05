@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Students in Class {{ class_num }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="app-layout">
+        {% include "admin/_sidebar.html" %}
+
+        <main class="app-main">
+            <div class="dashboard-topbar">
+                <div class="dashboard-search">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input id="student-search" class="mini-input" type="text" placeholder="Search students in this class">
+                </div>
+                <div class="topbar-actions">
+                    <a href="/students_by_class" class="topbar-chip"><i class="fa-solid fa-arrow-left"></i> Back to Classes</a>
+                    <a href="/admin" class="topbar-chip"><i class="fa-solid fa-house"></i> Dashboard</a>
+                </div>
+            </div>
+
+            <section class="dashboard-hero">
+                <div class="section-title" style="color:#fde68a;">Class {{ class_num }}</div>
+                <h1 style="margin:0;">Students in Class {{ class_num }}</h1>
+            </section>
+
+            <section class="dashboard-stat-grid">
+                <article class="dashboard-stat-card">
+                    <div class="label">Total Students</div>
+                    <div class="value">{{ students|length }}</div>
+                </article>
+                <article class="dashboard-stat-card">
+                    <div class="label">All Classes</div>
+                    <div class="value">12</div>
+                </article>
+            </section>
+
+            <section class="dashboard-mini-card" style="margin-top:20px;">
+                <div class="table-toolbar">
+                    <div>
+                        <div class="label">Class Roster</div>
+                        <h3>Complete list of students</h3>
+                    </div>
+                </div>
+
+                <div class="table-shell table-shell--scroll" style="margin-top:18px;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Roll No</th>
+                                <th>Name</th>
+                                <th>Mobile</th>
+                                <th>Enrollment No</th>
+                                <th>Blood</th>
+                                <th>School</th>
+                                <th>Class</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="student-table-body">
+                            {% for student in students %}
+                            <tr data-student-row data-search-text="{{ ((student.username or '') ~ ' ' ~ (student.rollno or '') ~ ' ' ~ (student.school or '') ~ ' ' ~ (student.enroll or ''))|lower }}">
+                                <td>{{ student.id }}</td>
+                                <td>{{ student.rollno }}</td>
+                                <td>{{ student.username }}</td>
+                                <td>{{ student.mobile or '-' }}</td>
+                                <td>{{ student.enroll or '-' }}</td>
+                                <td>{{ student.blood or '-' }}</td>
+                                <td>{{ student.school or '-' }}</td>
+                                <td><span class="badge" style="background: #667eea; color: white; padding: 4px 8px; border-radius: 4px;">{{ student.class }}</span></td>
+                                <td>
+                                    <a href="/update/{{ student.id }}" class="btn-edit">Edit</a>
+                                    <a href="/report/{{ student.id }}" class="btn-edit">Report</a>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="9" class="empty-copy">No students in this class yet.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        (function () {
+            const searchInput = document.getElementById("student-search");
+            const rows = Array.from(document.querySelectorAll("[data-student-row]"));
+
+            if (!searchInput) {
+                return;
+            }
+
+            searchInput.addEventListener("input", function () {
+                const query = (searchInput.value || "").trim().toLowerCase();
+
+                rows.forEach((row) => {
+                    const text = row.dataset.searchText || "";
+                    row.style.display = !query || text.includes(query) ? "" : "none";
+                });
+            });
+        }());
+    </script>
+</body>
+</html>

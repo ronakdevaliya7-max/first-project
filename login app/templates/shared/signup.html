@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        {% if signup_role == 'admin' %}Admin Signup{% elif signup_role == 'teacher' %}Teacher Signup{% else %}Register Student{% endif %}
+    </title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="signup-shell">
+        <div class="signup-layout">
+            <section class="signup-panel">
+                <div class="eyebrow">
+                    <i class="fa-solid fa-user-plus"></i>
+                    {% if signup_role == 'admin' %}
+                    Admin account creation
+                    {% elif signup_role == 'teacher' %}
+                    Teacher account creation
+                    {% else %}
+                    Admin student onboarding
+                    {% endif %}
+                </div>
+
+                <h1>
+                    {% if signup_role == 'admin' %}
+                    Create a new admin login with the same premium portal flow.
+                    {% elif signup_role == 'teacher' %}
+                    Build a teacher account ready for attendance and reports.
+                    {% else %}
+                    Create a new student profile with the same premium dashboard style.
+                    {% endif %}
+                </h1>
+
+                <p>
+                    {% if signup_role == 'admin' %}
+                    Add an admin access profile for dashboard control, records, and reporting without changing the existing login experience.
+                    {% elif signup_role == 'teacher' %}
+                    Register a teacher profile with contact, subject, and login details so the faculty workspace is ready immediately.
+                    {% else %}
+                    Add student records with academic details, login credentials, and optional profile photo from one polished registration workspace.
+                    {% endif %}
+                </p>
+
+                <div class="hero-chip-row">
+                    {% if signup_role == 'admin' %}
+                    <span class="hero-chip">Admin Dashboard</span>
+                    <span class="hero-chip">Secure Access</span>
+                    <span class="hero-chip">Reports Ready</span>
+                    <span class="hero-chip">Portal Control</span>
+                    {% elif signup_role == 'teacher' %}
+                    <span class="hero-chip">Teacher Workspace</span>
+                    <span class="hero-chip">Lecture Access</span>
+                    <span class="hero-chip">Attendance Ready</span>
+                    <span class="hero-chip">Subject Mapping</span>
+                    {% else %}
+                    <span class="hero-chip">Student Portal Ready</span>
+                    <span class="hero-chip">Secure Password Storage</span>
+                    <span class="hero-chip">Attendance Access</span>
+                    <span class="hero-chip">Profile Setup</span>
+                    {% endif %}
+                </div>
+
+                <div class="signup-stat-grid">
+                    <div class="signup-stat-card">
+                        <strong>1</strong>
+                        <span>Focused signup flow</span>
+                    </div>
+                    <div class="signup-stat-card">
+                        <strong>24/7</strong>
+                        <span>Portal access readiness</span>
+                    </div>
+                    <div class="signup-stat-card">
+                        <strong>100%</strong>
+                        <span>Role-based account setup</span>
+                    </div>
+                </div>
+
+                <div class="login-points">
+                    <div class="login-point">
+                        <i class="fa-solid fa-id-card"></i>
+                        <div>
+                            <strong>Role-specific profile setup</strong>
+                            <div>Each signup flow only asks for the details needed for that specific panel and login.</div>
+                        </div>
+                    </div>
+                    <div class="login-point">
+                        <i class="fa-solid fa-lock"></i>
+                        <div>
+                            <strong>Safe password flow</strong>
+                            <div>Passwords are hashed in your Flask backend before the account is saved.</div>
+                        </div>
+                    </div>
+                    <div class="login-point">
+                        <i class="fa-solid fa-chart-line"></i>
+                        <div>
+                            <strong>Ready after signup</strong>
+                            <div>Users land back on the correct login screen and can continue into the right dashboard immediately.</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card signup-card">
+                <div class="brand-badge signup-badge">
+                    {% if signup_role == 'admin' %}Admin Signup{% elif signup_role == 'teacher' %}Teacher Signup{% else %}Register Student{% endif %}
+                </div>
+                <h2>
+                    {% if signup_role == 'admin' %}
+                    Create admin account
+                    {% elif signup_role == 'teacher' %}
+                    Create teacher account
+                    {% else %}
+                    Student registration
+                    {% endif %}
+                </h2>
+                <p class="signup-copy">
+                    {% if signup_role == 'admin' %}
+                    Fill the details below to create a new admin login.
+                    {% elif signup_role == 'teacher' %}
+                    Fill the teacher details below to create a faculty login profile.
+                    {% else %}
+                    Fill the student details below to add a new student profile to the system.
+                    {% endif %}
+                </p>
+
+                <form method="post" enctype="multipart/form-data" autocomplete="off">
+                    <input type="hidden" name="role" value="{{ signup_role }}">
+
+                    <div class="signup-form-grid">
+                        {% if signup_role == 'admin' %}
+                        <div>
+                            <label>Admin Name</label>
+                            <div class="input-icon-group">
+                                <i class="fa-regular fa-user"></i>
+                                <input type="text" name="name" placeholder="Enter admin name" required>
+                            </div>
+                        </div>
+                        <div>
+                            <label>Mobile</label>
+                            <div class="input-icon-group">
+                                <i class="fa-solid fa-phone"></i>
+                                <input type="text" name="mobile" placeholder="Enter mobile number">
+                            </div>
+                        </div>
+                        {% elif signup_role == 'teacher' %}
+                        <div>
+                            <label>Teacher Name</label>
+                            <div class="input-icon-group">
+                                <i class="fa-regular fa-user"></i>
+                                <input type="text" name="name" placeholder="Enter teacher name" required>
+                            </div>
+                        </div>
+                        <div>
+                            <label>Email</label>
+                            <div class="input-icon-group">
+                                <i class="fa-regular fa-envelope"></i>
+                                <input type="email" name="email" placeholder="Enter email address">
+                            </div>
+                        </div>
+                        <div>
+                            <label>Mobile</label>
+                            <div class="input-icon-group">
+                                <i class="fa-solid fa-phone"></i>
+                                <input type="text" name="mobile" placeholder="Enter mobile number">
+                            </div>
+                        </div>
+                        <div>
+                            <label>Course</label>
+                            <div class="input-icon-group">
+                                <i class="fa-solid fa-book-open"></i>
+                                <input type="text" name="course" placeholder="Enter course name">
+                            </div>
+                        </div>
+                        <div>
+                            <label>Subject</label>
+                            <div class="input-icon-group">
+                                <i class="fa-solid fa-book"></i>
+                                <input type="text" name="subject" placeholder="Enter subject name">
+                            </div>
+                        </div>
+                        {% else %}
+                        <div>
+                            <label>Roll No</label>
+                            <div class="input-icon-group">
+                                <i class="fa-solid fa-hashtag"></i>
+                                <input type="text" name="rollno" placeholder="Enter roll number">
+                            </div>
+                        </div>
+                        <div>
+                            <label>Gender</label>
+                            <div class="input-icon-group">
+                                <i class="fa-solid fa-venus-mars"></i>
+                                <select name="gender">
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label>Mobile</label>
+                            <div class="input-icon-group">
+                                <i class="fa-solid fa-phone"></i>
+                                <input type="text" name="mobile" placeholder="Enter mobile number">
+                            </div>
+                        </div>
+                        <div>
+                            <label>Birthdate</label>
+                            <div class="input-icon-group">
+                                <i class="fa-regular fa-calendar"></i>
+                                <input type="date" name="birthdate">
+                            </div>
+                        </div>
+                        <div>
+                            <label>Enrollment No</label>
+                            <div class="input-icon-group">
+                                <i class="fa-solid fa-id-badge"></i>
+                                <input type="text" name="enroll" placeholder="Enter enrollment number">
+                            </div>
+                        </div>
+                        <div>
+                            <label>Blood Group</label>
+                            <div class="input-icon-group">
+                                <i class="fa-solid fa-droplet"></i>
+                                <input type="text" name="blood" placeholder="Blood group">
+                            </div>
+                        </div>
+                        <div>
+                            <label>School Name</label>
+                            <div class="input-icon-group">
+                                <i class="fa-solid fa-school"></i>
+                                <input type="text" name="school" placeholder="Enter school name">
+                            </div>
+                        </div>
+                        <div>
+                            <label>Class</label>
+                            <div class="input-icon-group">
+                                <i class="fa-solid fa-graduation-cap"></i>
+                                <select name="class">
+                                    <option value="">Select Class</option>
+                                    <option value="1">Class 1</option>
+                                    <option value="2">Class 2</option>
+                                    <option value="3">Class 3</option>
+                                    <option value="4">Class 4</option>
+                                    <option value="5">Class 5</option>
+                                    <option value="6">Class 6</option>
+                                    <option value="7">Class 7</option>
+                                    <option value="8">Class 8</option>
+                                    <option value="9">Class 9</option>
+                                    <option value="10">Class 10</option>
+                                    <option value="11">Class 11</option>
+                                    <option value="12">Class 12</option>
+                                </select>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div>
+                            <label>Username</label>
+                            <div class="input-icon-group">
+                                <i class="fa-regular fa-user"></i>
+                                <input type="text" name="username" placeholder="Choose username" required>
+                            </div>
+                        </div>
+                        <div>
+                            <label>Password</label>
+                            <div class="input-icon-group">
+                                <i class="fa-solid fa-lock"></i>
+                                <input type="password" id="passwordField" name="password" placeholder="Create password" required>
+                                <button type="button" class="password-toggle" id="passwordToggle" aria-label="Show password" aria-pressed="false">
+                                    <i id="passwordIcon" class="fa-regular fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div>
+                            <label>Confirm Password</label>
+                            <div class="input-icon-group">
+                                <i class="fa-solid fa-lock"></i>
+                                <input type="password" id="confirmPasswordField" name="confirm_password" placeholder="Confirm password" required>
+                                <button type="button" class="password-toggle" id="confirmPasswordToggle" aria-label="Show confirm password" aria-pressed="false">
+                                    <i id="confirmPasswordIcon" class="fa-regular fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if signup_role == 'student' %}
+                    <label>Address</label>
+                    <textarea name="address" placeholder="Enter address"></textarea>
+
+                    <label>Profile Photo</label>
+                    <input type="file" name="photo">
+                    {% endif %}
+
+                    {% if msg %}
+                    <div class="form-alert form-alert--error">
+                        {{ msg }}
+                    </div>
+                    {% endif %}
+
+                    <button type="submit" style="width:100%; margin-top:24px;">
+                        {% if signup_role == 'admin' %}
+                        Create Admin Account
+                        {% elif signup_role == 'teacher' %}
+                        Create Teacher Account
+                        {% else %}
+                        Register Student
+                        {% endif %}
+                    </button>
+                </form>
+
+                <div class="action-row signup-actions">
+                    {% if signup_role == 'admin' %}
+                    <a href="/" class="secondary-link">Back to Home</a>
+                    <a href="/admin_login" class="secondary-link">Admin Login</a>
+                    {% elif signup_role == 'teacher' %}
+                    <a href="/" class="secondary-link">Back to Home</a>
+                    <a href="/teacher_login" class="secondary-link">Teacher Login</a>
+                    {% else %}
+                    <a href="/admin" class="secondary-link">Dashboard</a>
+                    <a href="/list" class="secondary-link">Students List</a>
+                    {% endif %}
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+    (function () {
+        function wirePasswordToggle(fieldId, buttonId, iconId) {
+            const field = document.getElementById(fieldId);
+            const button = document.getElementById(buttonId);
+            const icon = document.getElementById(iconId);
+
+            if (!field || !button || !icon) {
+                return;
+            }
+
+            button.addEventListener("click", function () {
+                const isPassword = field.type === "password";
+                field.type = isPassword ? "text" : "password";
+                icon.className = isPassword ? "fa-regular fa-eye-slash" : "fa-regular fa-eye";
+                button.setAttribute("aria-label", isPassword ? "Hide password" : "Show password");
+                button.setAttribute("aria-pressed", isPassword ? "true" : "false");
+            });
+        }
+
+        wirePasswordToggle("passwordField", "passwordToggle", "passwordIcon");
+        wirePasswordToggle("confirmPasswordField", "confirmPasswordToggle", "confirmPasswordIcon");
+    }());
+    </script>
+</body>
+</html>

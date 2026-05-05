@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Timetable</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="page-shell">
+        <div class="page-hero">
+            <div class="section-title">Admin Timetable</div>
+            <h1>Manage Timetable</h1>
+            <p>Create a new day-wise timetable, save it, and refresh lecture dates from the admin panel only.</p>
+            <div class="action-row">
+                <a href="/admin" class="secondary-link">Dashboard</a>
+                <a href="/timetable" class="secondary-link">View Timetable</a>
+                <a href="/generate_auto_timetable" class="secondary-link">Sync Only</a>
+            </div>
+        </div>
+
+        {% if error %}
+        <div class="form-feedback form-feedback--error">{{ error }}</div>
+        {% endif %}
+        {% if success %}
+        <div class="form-feedback form-feedback--success">Timetable saved and lecture schedule refreshed.</div>
+        {% endif %}
+
+        <form method="post" class="timetable-builder-shell" id="timetable-builder-form">
+            <div class="dashboard-mini-card">
+                <div class="label">Timetable Settings</div>
+                <div class="timetable-settings-grid">
+                    <div>
+                        <label for="start_date">Start Date</label>
+                        <input id="start_date" name="start_date" type="date" value="{{ start_date }}" required>
+                    </div>
+                    <div>
+                        <label for="total_days">Generate For Days</label>
+                        <input id="total_days" name="total_days" type="number" min="1" value="{{ total_days }}" required>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-mini-card" style="margin-top:20px;">
+                <div class="table-toolbar">
+                    <div>
+                        <div class="label">Builder</div>
+                        <h3>Day-wise timetable rows</h3>
+                    </div>
+                    <div class="builder-controls">
+                        <button type="button" class="secondary-link builder-button" id="add-lecture-row">Add Lecture Row</button>
+                        <button type="button" class="secondary-link builder-button" id="add-break-row">Add Break Row</button>
+                    </div>
+                </div>
+
+                <input type="hidden" name="row_count" id="row_count" value="{{ builder_rows|length }}">
+
+                <div class="table-shell table-shell--scroll timetable-builder-table-shell" style="margin-top:18px;">
+                    <table class="timetable-builder-table">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Period</th>
+                                <th>Start</th>
+                                <th>End</th>
+                                {% for day in timetable_days %}
+                                <th>{{ day }}</th>
+                                {% endfor %}
+                                <th>Remove</th>
+                            </tr>
+                        </thead>
+                        <tbody id="builder-body">
+                            {% for row in builder_rows %}
+                            <tr data-builder-row data-row-type="{{ 'break' if row.is_break else 'lecture' }}">
+                                <td>
+                                    <input type="hidden" value="{{ 'break' if row.is_break else 'lecture' }}" data-row-type-input>
+                                    <span class="builder-row-type">{{ 'Break' if row.is_break else 'Lecture' }}</span>
+                                </td>
+                                <td>
+                                    <input type="text" value="{{ row.number }}" data-period-input {% if row.is_break %}disabled{% endif %}>
+                                </td>
+                                <td>
+                                    <input type="time" value="{{ row.start_time }}" data-start-input required>
+                                </td>
+                                <td>
+                                    <input type="time" value="{{ row.end_time }}" data-end-input required>
+                                </td>
+                                {% for day in timetable_days %}
+                                <td>
+                                    <input
+                                        type="text"
+                                        value="{{ row.courses[day] if not row.is_break else '' }}"
+                                        data-day-input="{{ day|lower }}"
+                                        {% if row.is_break %}disabled{% endif %}
+                                    >
+                                </td>
+                                {% endfor %}
+                                <td class="builder-row-actions">
+                                    <button type="button" class="btn-delete builder-remove">Remove</button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="action-row">
+                    <button type="submit">Save Timetable</button>
+                </div>
+            </div>
+        </form>
+
+        <div style="margin-top:20px;">
+            {% include "shared/_weekly_timetable.html" %}
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            const form = document.getElementById("timetable-builder-form");
+            const body = document.getElementById("builder-body");
+            const rowCountInput = document.getElementById("row_count");
+            const addLectureButton = document.getElementById("add-lecture-row");
+            const addBreakButton = document.getElementById("add-break-row");
+            const dayKeys = {{ timetable_day_keys|tojson }};
+
+            function buildRow(rowType) {
+                const tr = document.createElement("tr");
+                tr.dataset.builderRow = "";
+                tr.dataset.rowType = rowType;
+
+                const typeCell = document.createElement("td");
+                const typeHidden = document.createElement("input");
+                typeHidden.type = "hidden";
+                typeHidden.dataset.rowTypeInput = "";
+                typeHidden.value = rowType;
+                const typeBadge = document.createElement("span");
+                typeBadge.className = "builder-row-type";
+                typeBadge.textContent = rowType === "break" ? "Break" : "Lecture";
+                typeCell.appendChild(typeHidden);
+                typeCell.appendChild(typeBadge);
+                tr.appendChild(typeCell);
+
+                const periodCell = document.createElement("td");
+                const periodInput = document.createElement("input");
+                periodInput.type = "text";
+                periodInput.dataset.periodInput = "";
+                if (rowType === "break") {
+                    periodInput.disabled = true;
+                }
+                periodCell.appendChild(periodInput);
+                tr.appendChild(periodCell);
+
+                const startCell = document.createElement("td");
+                const startInput = document.createElement("input");
+                startInput.type = "time";
+                startInput.required = true;
+                startInput.dataset.startInput = "";
+                startCell.appendChild(startInput);
+                tr.appendChild(startCell);
+
+                const endCell = document.createElement("td");
+                const endInput = document.createElement("input");
+                endInput.type = "time";
+                endInput.required = true;
+                endInput.dataset.endInput = "";
+                endCell.appendChild(endInput);
+                tr.appendChild(endCell);
+
+                dayKeys.forEach((dayKey) => {
+                    const dayCell = document.createElement("td");
+                    const dayInput = document.createElement("input");
+                    dayInput.type = "text";
+                    dayInput.dataset.dayInput = dayKey;
+                    if (rowType === "break") {
+                        dayInput.disabled = true;
+                    }
+                    dayCell.appendChild(dayInput);
+                    tr.appendChild(dayCell);
+                });
+
+                const actionCell = document.createElement("td");
+                actionCell.className = "builder-row-actions";
+                const removeButton = document.createElement("button");
+                removeButton.type = "button";
+                removeButton.className = "btn-delete builder-remove";
+                removeButton.textContent = "Remove";
+                actionCell.appendChild(removeButton);
+                tr.appendChild(actionCell);
+
+                return tr;
+            }
+
+            function renameRows() {
+                const rows = Array.from(body.querySelectorAll("[data-builder-row]"));
+                rowCountInput.value = rows.length;
+
+                rows.forEach((row, index) => {
+                    const rowType = row.dataset.rowType || "lecture";
+                    const rowTypeInput = row.querySelector("[data-row-type-input]");
+                    const periodInput = row.querySelector("[data-period-input]");
+                    const startInput = row.querySelector("[data-start-input]");
+                    const endInput = row.querySelector("[data-end-input]");
+                    const dayInputs = Array.from(row.querySelectorAll("[data-day-input]"));
+                    const typeBadge = row.querySelector(".builder-row-type");
+
+                    rowTypeInput.name = "row_type_" + index;
+                    rowTypeInput.value = rowType;
+                    periodInput.name = "period_number_" + index;
+                    startInput.name = "start_time_" + index;
+                    endInput.name = "end_time_" + index;
+                    periodInput.disabled = rowType === "break";
+                    typeBadge.textContent = rowType === "break" ? "Break" : "Lecture";
+
+                    dayInputs.forEach((input) => {
+                        const dayKey = input.dataset.dayInput;
+                        input.name = "lecture_" + index + "_" + dayKey;
+                        input.disabled = rowType === "break";
+                        if (rowType === "break") {
+                            input.value = "";
+                        }
+                    });
+                });
+            }
+
+            addLectureButton.addEventListener("click", function () {
+                body.appendChild(buildRow("lecture"));
+                renameRows();
+            });
+
+            addBreakButton.addEventListener("click", function () {
+                body.appendChild(buildRow("break"));
+                renameRows();
+            });
+
+            body.addEventListener("click", function (event) {
+                const removeButton = event.target.closest(".builder-remove");
+                if (!removeButton) {
+                    return;
+                }
+
+                const row = removeButton.closest("[data-builder-row]");
+                if (!row) {
+                    return;
+                }
+
+                row.remove();
+                renameRows();
+            });
+
+            form.addEventListener("submit", function () {
+                renameRows();
+            });
+
+            renameRows();
+        }());
+    </script>
+</body>
+</html>

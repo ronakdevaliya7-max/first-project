@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="app-layout">
+        {% include "admin/_sidebar.html" %}
+
+        <main class="app-main">
+            <div class="dashboard-topbar">
+                <div class="dashboard-search">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" placeholder="Search students, teachers, or reports">
+                </div>
+                <div class="topbar-actions">
+                    <div class="topbar-chip"><i class="fa-regular fa-user"></i> {{ admin_user.username if admin_user else "Admin" }}</div>
+                </div>
+            </div>
+
+            <section class="dashboard-hero admin-hero-shell">
+                <div class="admin-hero-grid">
+                    <div>
+                        <div class="section-title" style="color:#fde68a;">Admin Workspace</div>
+                        <h1 style="margin:0;">Welcome {{ admin_user.username if admin_user else "Admin" }}</h1>
+                        <p>Monitor {{ users|length }} students, {{ teachers|length if teachers else 0 }} teachers, {{ pending_leave_count }} pending leave requests, and {{ reports_ready }} ready reports from one control desk.</p>
+                        <div class="dashboard-chip-row">
+                            <a href="/list" class="hero-chip"><i class="fa-solid fa-users"></i> {{ users|length }} Students</a>
+                            <a href="/teachers" class="hero-chip"><i class="fa-solid fa-user-tie"></i> {{ teachers|length if teachers else 0 }} Teachers</a>
+                            <a href="/class_reports" class="hero-chip"><i class="fa-solid fa-layer-group"></i> {{ reports_ready }} Reports</a>
+                        </div>
+                        <div class="action-row">
+                            <a href="/signup" class="primary-link">Add Student</a>
+                            <a href="/add_teacher" class="secondary-link">Add Teacher</a>
+                            <a href="/attendance_by_class" class="secondary-link">Mark Attendance</a>
+                            <a href="/class_reports" class="secondary-link">View Reports</a>
+                        </div>
+
+                        <div class="admin-inline-grid">
+                            <a href="/courses" class="admin-inline-card">
+                                <span>Courses</span>
+                                <strong>{{ course_count }}</strong>
+                            </a>
+                            <a href="/subjects" class="admin-inline-card">
+                                <span>Subjects</span>
+                                <strong>{{ subject_count }}</strong>
+                            </a>
+                            <a href="/manage_timetable" class="admin-inline-card">
+                                <span>Lecture Slots</span>
+                                <strong>{{ lecture_slot_count }}</strong>
+                            </a>
+                            <a href="/weekly_attendance" class="admin-inline-card">
+                                <span>Reports Ready</span>
+                                <strong>{{ reports_ready }}</strong>
+                            </a>
+                        </div>
+                    </div>
+
+                    <aside class="teacher-side-stack">
+                        <section class="teacher-side-card teacher-side-card--dark">
+                            <div class="label">Control Summary</div>
+                            <h3>Admin pulse</h3>
+                            <div class="teacher-side-metrics">
+                                <a href="/attendance_by_class" class="teacher-side-metric teacher-side-metric--link">
+                                    <span>Attendance</span>
+                                    <strong>{{ attendance_health }}%</strong>
+                                </a>
+                                <a href="/class_reports" class="teacher-side-metric teacher-side-metric--link">
+                                    <span>Modules</span>
+                                    <strong>{{ open_modules }}</strong>
+                                </a>
+                                <a href="/admin" class="teacher-side-metric teacher-side-metric--link">
+                                    <span>Leaves</span>
+                                    <strong>{{ pending_leave_count }}</strong>
+                                </a>
+                                <a href="/festivals" class="teacher-side-metric teacher-side-metric--link">
+                                    <span>Festivals</span>
+                                    <strong>{{ festival_count }}</strong>
+                                </a>
+                            </div>
+                        </section>
+
+                        <section class="teacher-side-card">
+                            <div class="label">Action Queue</div>
+                            <h3>Latest leave requests</h3>
+                            <div class="teacher-agenda-list">
+                                {% for leave in leave_requests[:4] %}
+                                <div class="teacher-agenda-item">
+                                    <div class="teacher-agenda-icon"><i class="fa-solid fa-file-signature"></i></div>
+                                    <div>
+                                        <strong>{{ leave.username or 'Student' }}</strong>
+                                        <span>{{ leave.from_date|display_date }} to {{ leave.to_date|display_date }} | {{ leave.status or 'Pending' }}</span>
+                                    </div>
+                                </div>
+                                {% else %}
+                                <div class="empty-copy">No leave requests available right now.</div>
+                                {% endfor %}
+                            </div>
+                        </section>
+                    </aside>
+                </div>
+            </section>
+
+            <section class="dashboard-stat-grid">
+                <a href="/list" class="dashboard-stat-card">
+                    <div class="label">Total Students</div>
+                    <div class="value">{{ users|length }}</div>
+                </a>
+                <a href="/teachers" class="dashboard-stat-card">
+                    <div class="label">Total Teachers</div>
+                    <div class="value">{{ teachers|length if teachers else 0 }}</div>
+                </a>
+                <a href="/attendance_by_class" class="dashboard-stat-card">
+                    <div class="label">Today's Attendance</div>
+                    <div class="value">{{ attendance_health }}%</div>
+                </a>
+                <a href="/class_reports" class="dashboard-stat-card">
+                    <div class="label">Classes</div>
+                    <div class="value">{{ open_modules }}</div>
+                </a>
+                <a href="/festivals" class="dashboard-stat-card">
+                    <div class="label">Next Festival</div>
+                    <div class="value" style="font-size:22px;">{{ next_festival["name"] if next_festival else "No Festival" }}</div>
+                    <div class="meta">{{ next_festival["festival_date"]|display_date if next_festival else "No upcoming holiday" }}</div>
+                </a>
+            </section>
+
+            <section class="dashboard-grid">
+                <div class="dashboard-mini-card">
+                    <div class="label">Quick Access</div>
+                    <div class="quick-link-grid">
+                        <a href="/attendance_by_class" class="quick-link-card quick-link-card--teal">
+                            <i class="fa-solid fa-clipboard-check"></i>
+                            <strong>Mark Attendance</strong>
+                            <span>Record daily class attendance by class group.</span>
+                        </a>
+                        <a href="/list" class="quick-link-card quick-link-card--orange">
+                            <i class="fa-solid fa-users"></i>
+                            <strong>Manage Students</strong>
+                            <span>View, add, edit, or remove student records.</span>
+                        </a>
+                        <a href="/teachers" class="quick-link-card quick-link-card--navy">
+                            <i class="fa-solid fa-user-tie"></i>
+                            <strong>Manage Teachers</strong>
+                            <span>Handle teacher records and subject assignments.</span>
+                        </a>
+                        <a href="/class_reports" class="quick-link-card quick-link-card--olive">
+                            <i class="fa-solid fa-chart-bar"></i>
+                            <strong>View Reports</strong>
+                            <span>Check class-wise attendance and performance reports.</span>
+                        </a>
+                        <a href="/festivals" class="quick-link-card quick-link-card--teal">
+                            <i class="fa-solid fa-calendar-star"></i>
+                            <strong>Festival Calendar</strong>
+                            <span>Open upcoming holidays and plan attendance, timetable, and reports around them.</span>
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <section class="dashboard-grid" style="margin-top:20px;">
+                <div class="dashboard-mini-card">
+                    <div class="table-toolbar">
+                        <div>
+                            <div class="label">Student Reports</div>
+                            <h3>Student overview table</h3>
+                        </div>
+                        <a href="/list" class="topbar-chip"><i class="fa-solid fa-users"></i> View All Students</a>
+                    </div>
+
+                    <div class="table-shell table-shell--scroll" style="margin-top:18px;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Roll No</th>
+                                    <th>Name</th>
+                                    <th>Class</th>
+                                    <th>Attendance</th>
+                                    <th>Report</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in users[:6] %}
+                                <tr>
+                                    <td>{{ student.rollno or '-' }}</td>
+                                    <td>{{ student.username }}</td>
+                                    <td>{{ student.class or '-' }}</td>
+                                    <td>
+                                        {% set present_count = student.present_count or 0 %}
+                                        {% set total_count = student.total_count or 0 %}
+                                        {{ ((present_count / total_count) * 100)|round(0)|int if total_count else 0 }}%
+                                    </td>
+                                    <td><a href="/report/{{ student.id }}" class="btn-edit">View</a></td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="5" class="empty-copy">No students added yet.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="dashboard-mini-card">
+                    <div class="table-toolbar">
+                        <div>
+                            <div class="label">Teacher Reports</div>
+                            <h3>Teacher overview table</h3>
+                        </div>
+                        <a href="/teachers" class="topbar-chip"><i class="fa-solid fa-user-tie"></i> View All Teachers</a>
+                    </div>
+
+                    <div class="table-shell table-shell--scroll" style="margin-top:18px;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Username</th>
+                                    <th>Subject</th>
+                                    <th>Attendance</th>
+                                    <th>Report</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for teacher in teachers[:6] %}
+                                <tr>
+                                    <td>{{ teacher.name or '-' }}</td>
+                                    <td>{{ teacher.username or '-' }}</td>
+                                    <td>{{ teacher.subject or '-' }}</td>
+                                    <td>
+                                        {% set present_count = teacher.present_count or 0 %}
+                                        {% set total_count = teacher.total_count or 0 %}
+                                        {{ ((present_count / total_count) * 100)|round(0)|int if total_count else 0 }}%
+                                    </td>
+                                    <td><a href="/teacher_report/{{ teacher.id }}" class="btn-edit">View</a></td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="5" class="empty-copy">No teachers added yet.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script>
+        function toggleAccordion(button) {
+            const content = button.nextElementSibling;
+
+            document.querySelectorAll('.accordion-content').forEach((panel) => {
+                if (panel !== content) {
+                    panel.classList.remove('active');
+                    panel.previousElementSibling.classList.remove('active');
+                }
+            });
+
+            content.classList.toggle('active');
+            button.classList.toggle('active');
+        }
+    </script>
+</body>
+</html>

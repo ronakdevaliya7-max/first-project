@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Teacher</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="page-shell">
+        <div class="page-hero">
+            <div class="section-title">Faculty Management</div>
+            <h1>Edit Teacher</h1>
+            <p>Update teacher contact details and revise the assigned course and subject mapping.</p>
+            <div class="action-row">
+                <a href="/teachers" class="secondary-link">Teacher List</a>
+                <a href="/admin" class="secondary-link">Dashboard</a>
+                <a href="/logout" class="secondary-link" onclick="return confirm('Are you sure you want to logout?')">Logout</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-box">
+        <form method="post">
+            <label>Name</label>
+            <input name="name" value="{{ teacher.name }}" required>
+
+            <label>Email</label>
+            <input name="email" value="{{ teacher.email }}" type="email" required>
+
+            <label>Mobile</label>
+            <input name="mobile" value="{{ teacher.mobile }}" required>
+
+            <label>Username</label>
+            <input name="username" value="{{ teacher.username }}" required>
+
+            <label>New Password</label>
+            <input name="password" type="text" placeholder="Leave blank to keep current password">
+
+            <label>Course</label>
+            <select name="course" required>
+                {% for c in courses %}
+                <option value="{{ c.name }}" {% if c.name == teacher.course %}selected{% endif %}>{{ c.name }}</option>
+                {% endfor %}
+            </select>
+
+            <label>Subject</label>
+            <select name="subject" required>
+                {% for s in subjects %}
+                <option value="{{ s.name }}" {% if s.name == teacher.subject %}selected{% endif %}>{{ s.name }}</option>
+                {% endfor %}
+            </select>
+
+            {% if msg %}
+            <div style="margin-top:16px; padding:14px; border-radius:14px; background:#fee2e2; color:#991b1b; font-weight:700;">
+                {{ msg }}
+            </div>
+            {% endif %}
+
+            <button type="submit" style="width:100%; margin-top:24px;">Update Teacher</button>
+        </form>
+    </div>
+</body>
+</html>

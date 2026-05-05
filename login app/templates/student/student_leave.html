@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Leave Application</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="app-layout">
+        <aside class="app-sidebar">
+            <div class="app-brand">
+                <div class="app-brand-badge">S</div>
+                <div>
+                    <h2>Student Desk</h2>
+                    <div class="sidebar-copy">Attendance, leave, and timetable in one premium workspace.</div>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="/home" class="sidebar-link"><i class="fa-solid fa-house"></i> Dashboard</a>
+                <a href="/my_attendance" class="sidebar-link"><i class="fa-solid fa-chart-simple"></i> My Attendance</a>
+                <a href="/student_leave" class="sidebar-link is-active"><i class="fa-solid fa-file-signature"></i> Leave Application</a>
+                <a href="/timetable" class="sidebar-link"><i class="fa-solid fa-calendar-days"></i> Timetable</a>
+                <a href="/weekly_attendance" class="sidebar-link"><i class="fa-solid fa-file-lines"></i> Weekly Report</a>
+                <a href="/festivals" class="sidebar-link"><i class="fa-solid fa-star"></i> Festivals</a>
+                <a href="/logout" class="sidebar-link" onclick="return confirm('Are you sure you want to logout?')"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+            </nav>
+
+            <div class="sidebar-footer">
+                Apply for leave, check latest request status, and keep your student activity organized.
+            </div>
+        </aside>
+
+        <main class="app-main">
+            <div class="dashboard-topbar">
+                <div class="dashboard-search">
+                    <a href="#apply" class="dashboard-search-link" data-leave-tab-target="apply">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <span>Leave application center</span>
+                    </a>
+                </div>
+                <div class="topbar-actions">
+                    <a href="/home" class="topbar-chip"><i class="fa-regular fa-id-badge"></i> {{ user.enroll or 'Pending' }}</a>
+                    <a href="/home" class="topbar-chip"><i class="fa-regular fa-user"></i> {{ user.username }}</a>
+                </div>
+            </div>
+
+            <section class="dashboard-hero student-hero-shell">
+                <div class="student-hero-grid">
+                    <div>
+                        <div class="section-title" style="color:#fde68a;">Leave Workflow</div>
+                        <h1 style="margin:0;">Student Leave Application</h1>
+                        <p>Submit leave requests in the same premium style as the rest of your project, then track approval updates without leaving the student panel.</p>
+                        <div class="dashboard-chip-row">
+                            <span class="hero-chip"><i class="fa-solid fa-file-circle-check"></i> Apply and track from one place</span>
+                            <span class="hero-chip"><i class="fa-solid fa-user-clock"></i> Latest status visible in history</span>
+                            <span class="hero-chip"><i class="fa-solid fa-calendar-week"></i> Works with your student dashboard flow</span>
+                        </div>
+                        <div class="action-row">
+                            <a href="/home" class="secondary-link">Back To Dashboard</a>
+                            <a href="/weekly_attendance" class="secondary-link">Weekly Report</a>
+                        </div>
+                    </div>
+
+                    <article class="student-focus-card">
+                        <div class="label">Leave Summary</div>
+                        <div class="focus-value">{{ leave_history|length }}</div>
+                        <p>Total requests submitted by {{ user.username }}. Open history below to track pending, approved, or rejected requests.</p>
+                        <div class="focus-meta">
+                            <a href="#history" class="focus-meta-link" data-leave-tab-target="history"><i class="fa-solid fa-hourglass-half"></i> Status-based history</a>
+                            <a href="#history" class="focus-meta-link" data-leave-tab-target="history"><i class="fa-solid fa-bell-concierge"></i> Admin or teacher can review it</a>
+                        </div>
+                    </article>
+                </div>
+            </section>
+
+            <section class="dashboard-stat-grid">
+                <article class="dashboard-stat-card">
+                    <div class="label">Total Requests</div>
+                    <div class="value">{{ leave_history|length }}</div>
+                </article>
+                <article class="dashboard-stat-card">
+                    <div class="label">Pending</div>
+                    <div class="value">{{ leave_history|selectattr('status', 'equalto', 'Pending')|list|length }}</div>
+                </article>
+                <article class="dashboard-stat-card">
+                    <div class="label">Approved</div>
+                    <div class="value">{{ leave_history|selectattr('status', 'equalto', 'Approved')|list|length }}</div>
+                </article>
+                <article class="dashboard-stat-card">
+                    <div class="label">Rejected</div>
+                    <div class="value">{{ leave_history|selectattr('status', 'equalto', 'Rejected')|list|length }}</div>
+                </article>
+            </section>
+
+            <section class="dashboard-mini-card" style="margin-top:20px;">
+                <div class="segmented-filter leave-tabs-shell">
+                    <button type="button" class="segment-pill is-active" data-leave-tab="apply">Apply Leave</button>
+                    <button type="button" class="segment-pill" data-leave-tab="history">Leave History</button>
+                </div>
+
+                <div class="leave-tab-panel" id="leave-apply-panel">
+                    {% if message %}
+                    <div class="leave-inline-alert leave-inline-alert--success">{{ message }}</div>
+                    {% endif %}
+                    {% if error %}
+                    <div class="leave-inline-alert leave-inline-alert--error">{{ error }}</div>
+                    {% endif %}
+
+                    <form method="post" class="leave-form-grid">
+                        <div class="leave-input-card">
+                            <label for="leave_kind">Kind Of Leave</label>
+                            <div class="leave-select-wrap">
+                                <select id="leave_kind" name="leave_kind" required>
+                                    <option value="" disabled {% if not form_data.leave_kind %}selected{% endif %}>Select kind of leave</option>
+                                    {% for option in leave_kind_options %}
+                                    <option value="{{ option }}" {% if form_data.leave_kind == option %}selected{% endif %}>{{ option }}</option>
+                                    {% endfor %}
+                                </select>
+                                <i class="fa-solid fa-chevron-down"></i>
+                            </div>
+                        </div>
+
+                        <div class="leave-input-card">
+                            <label for="leave_type">Type Of Leave</label>
+                            <div class="leave-select-wrap">
+                                <select id="leave_type" name="leave_type" required>
+                                    <option value="" disabled {% if not form_data.leave_type %}selected{% endif %}>Select type of leave</option>
+                                    {% for option in leave_type_options %}
+                                    <option value="{{ option }}" {% if form_data.leave_type == option %}selected{% endif %}>{{ option }}</option>
+                                    {% endfor %}
+                                </select>
+                                <i class="fa-solid fa-chevron-down"></i>
+                            </div>
+                        </div>
+
+                        <div class="leave-input-card">
+                            <label for="from_date">From Date</label>
+                            <div class="leave-date-wrap">
+                                <i class="fa-regular fa-calendar"></i>
+                                <input id="from_date" name="from_date" type="date" value="{{ form_data.from_date }}" required>
+                            </div>
+                        </div>
+
+                        <div class="leave-input-card">
+                            <label for="to_date">To Date</label>
+                            <div class="leave-date-wrap">
+                                <i class="fa-regular fa-calendar"></i>
+                                <input id="to_date" name="to_date" type="date" value="{{ form_data.to_date }}" required>
+                            </div>
+                        </div>
+
+                        <div class="leave-input-card leave-input-card--full">
+                            <label for="remarks">Remarks</label>
+                            <textarea id="remarks" name="remarks" placeholder="Enter your leave reason" required>{{ form_data.remarks }}</textarea>
+                        </div>
+
+                        <div class="leave-submit-row">
+                            <button type="submit">Save Leave Request</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="leave-tab-panel" id="leave-history-panel" hidden>
+                    <div class="leave-history-grid">
+                        {% for leave in leave_history %}
+                        <article class="leave-history-panel-card">
+                            <div class="leave-history-badge">
+                                <span>{{ leave.from_display }}</span>
+                                <span>to</span>
+                                <span>{{ leave.to_display }}</span>
+                            </div>
+                            <div class="leave-history-copy">
+                                <div class="leave-history-title">{{ leave.leave_kind }}</div>
+                                <p>{{ leave.leave_type }} request with remarks: {{ leave.remarks }}</p>
+                                <span class="status-pill status-pill--{{ (leave.status or 'pending')|lower }}">{{ leave.status or 'Pending' }}</span>
+                            </div>
+                        </article>
+                        {% else %}
+                        <div class="empty-copy">No leave application history yet.</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        (function () {
+            const tabs = Array.from(document.querySelectorAll("[data-leave-tab]"));
+            const tabLinks = Array.from(document.querySelectorAll("[data-leave-tab-target]"));
+            const applyPanel = document.getElementById("leave-apply-panel");
+            const historyPanel = document.getElementById("leave-history-panel");
+
+            function setTab(tabName) {
+                tabs.forEach((tab) => {
+                    tab.classList.toggle("is-active", tab.dataset.leaveTab === tabName);
+                });
+                applyPanel.hidden = tabName !== "apply";
+                historyPanel.hidden = tabName !== "history";
+            }
+
+            tabs.forEach((tab) => {
+                tab.addEventListener("click", function () {
+                    setTab(tab.dataset.leaveTab);
+                });
+            });
+
+            tabLinks.forEach((link) => {
+                link.addEventListener("click", function (event) {
+                    event.preventDefault();
+                    const target = link.dataset.leaveTabTarget || "apply";
+                    setTab(target);
+                    window.location.hash = target;
+                });
+            });
+
+            if (window.location.hash === "#history") {
+                setTab("history");
+            }
+        }());
+    </script>
+</body>
+</html>

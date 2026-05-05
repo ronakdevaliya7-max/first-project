@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subjects</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="page-shell">
+        <div class="page-hero">
+            <div class="section-title">Subject Inventory</div>
+            <h1>Subjects List</h1>
+            <p>Keep subject records organized for timetable generation, faculty mapping, and attendance workflows.</p>
+            <div class="action-row">
+                <a href="/admin" class="secondary-link">Dashboard</a>
+                <a href="/add_subject" class="primary-link">Add Subject</a>
+                <a href="/logout" class="secondary-link" onclick="return confirm('Are you sure you want to logout?')">Logout</a>
+            </div>
+        </div>
+
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-label">Total Subjects</div>
+                <div class="stat-value">{{ subjects|length }}</div>
+            </div>
+        </div>
+
+        <div class="table-shell">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Course</th>
+                        <th>Edit</th>
+                        <th>Delete</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in subjects %}
+                    <tr>
+                        <td>{{ s.id }}</td>
+                        <td>{{ s.name }}</td>
+                        <td>{{ s.course or '-' }}</td>
+                        <td><a href="/edit_subject/{{ s.id }}" class="btn-edit">Edit</a></td>
+                        <td><a href="/delete_subject/{{ s.id }}" class="btn-delete" onclick="return confirm('Delete subject?')">Delete</a></td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="empty-copy">No subjects added yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Report</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="page-shell">
+        <div class="page-hero">
+            <div class="back-button">
+                <button type="button" onclick="history.back()">Back</button>
+            </div>
+            <div class="section-title">{% if is_student_view %}Student Analytics{% else %}Attendance Analytics{% endif %}</div>
+            <h1>{% if is_student_view %}My Attendance Report{% else %}Attendance Report{% endif %}</h1>
+            <div class="action-row">
+                {% if is_student_view %}
+                <a href="/home" class="secondary-link">Dashboard</a>
+                <a href="/my_attendance" class="secondary-link">My Attendance</a>
+                {% else %}
+                <a href="/admin" class="secondary-link">Dashboard</a>
+                <a href="/list" class="secondary-link">Students</a>
+                <a href="/attendance" class="secondary-link">Attendance</a>
+                {% endif %}
+                <a href="/excel/{{ student.id }}" class="primary-link">{% if is_student_view %}Download My Report{% else %}Download Report{% endif %}</a>
+            </div>
+
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-label">Student</div>
+                    <div class="stat-value" style="font-size:22px;">{{ student.username }}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Roll No</div>
+                    <div class="stat-value" style="font-size:22px;">{{ student.rollno }}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Present</div>
+                    <div class="stat-value">{{ present }}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Absent</div>
+                    <div class="stat-value">{{ absent }}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Leave</div>
+                    <div class="stat-value">{{ leave or 0 }}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Attendance</div>
+                    <div class="stat-value">{{ percent }}%</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-shell">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        {% if report_type == 'lecture' %}
+                        <th>Day</th>
+                        <th>Subject</th>
+                        <th>Time</th>
+                        {% endif %}
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in data %}
+                    <tr>
+                        <td>
+                            {% if is_student_view %}
+                            {{ r.date|display_date }}
+                            {% else %}
+                            <a href="/date/{{ r.date }}">{{ r.date|display_date }}</a>
+                            {% endif %}
+                        </td>
+                        {% if report_type == 'lecture' %}
+                        <td>{{ r.day or '-' }}</td>
+                        <td>{{ r.lecture_name or '-' }}</td>
+                        <td>{{ r.time or '-' }}</td>
+                        {% endif %}
+                        <td>{{ r.status }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="{% if report_type == 'lecture' %}5{% else %}2{% endif %}" class="empty-copy">No attendance data found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="stats-row" style="margin-top:22px; align-items:stretch;">
+            <div class="stat-card" style="display:flex; flex-direction:column; justify-content:center;">
+                <div class="stat-label">Summary</div>
+                <p style="margin:14px 0 0; line-height:1.8;">
+                    Present: <strong>{{ present }}</strong><br>
+                    Absent: <strong>{{ absent }}</strong><br>
+                    Leave: <strong>{{ leave or 0 }}</strong><br>
+                    Attendance Percentage: <strong>{{ percent }}%</strong>
+                </p>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Attendance Graph</div>
+                <div style="width:min(100%, 360px); margin:18px auto 0;">
+                    <canvas id="attendanceChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    const present = Number("{{ present }}");
+    const absent = Number("{{ absent }}");
+    const leave = Number("{{ leave or 0 }}");
+    const ctx = document.getElementById("attendanceChart").getContext("2d");
+
+    new Chart(ctx, {
+        type: "pie",
+        data: {
+            labels: ["Present", "Absent", "Leave"],
+            datasets: [{
+                data: [present, absent, leave],
+                backgroundColor: ["#15803d", "#b91c1c", "#d97706"]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true
+        }
+    });
+    </script>
+</body>
+</html>

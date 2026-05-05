@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Attendance Report</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="page-shell">
+        <div class="page-hero">
+            <div class="back-button">
+                <button type="button" onclick="history.back()">Back</button>
+            </div>
+            <div class="section-title">Teacher Analytics</div>
+            <h1>Teacher Attendance Report</h1>
+            <p>
+                {% if selected_date %}
+                {% if is_teacher_view %}
+                Review your attendance summary, chart, and saved rows for {{ selected_date }}.
+                {% else %}
+                Review teacher attendance summary, chart, and saved rows for {{ selected_date }}.
+                {% endif %}
+                {% else %}
+                {% if is_teacher_view %}
+                Review your attendance summary, chart, and saved rows across all dates.
+                {% else %}
+                Review teacher attendance summary, chart, and saved rows across all dates.
+                {% endif %}
+                {% endif %}
+            </p>
+            <div class="action-row">
+                {% if is_teacher_view %}
+                <a href="/teacher" class="secondary-link">Teacher Dashboard</a>
+                {% else %}
+                <a href="/teacher_attendance?date={{ selected_date }}" class="secondary-link">Teacher Attendance</a>
+                {% endif %}
+                <a href="/teacher_attendance_download?date={{ selected_date }}{% if report_teacher_id %}&teacher_id={{ report_teacher_id }}{% endif %}" class="primary-link">Download Report</a>
+                <a href="{% if report_teacher_id and not is_teacher_view %}/teachers{% elif is_teacher_view %}/weekly_attendance{% else %}/admin{% endif %}" class="secondary-link">{% if report_teacher_id and not is_teacher_view %}Teachers List{% elif is_teacher_view %}Weekly Report{% else %}Dashboard{% endif %}</a>
+            </div>
+
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-label">Date Filter</div>
+                    <div class="stat-value" style="font-size:22px;">{{ selected_date or 'All Dates' }}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Present Entries</div>
+                    <div class="stat-value">{{ total_present }}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Absent Entries</div>
+                    <div class="stat-value">{{ total_absent }}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Entries</div>
+                    <div class="stat-value">{{ total_records }}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Overall Attendance</div>
+                    <div class="stat-value">{{ overall_percent }}%</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-shell">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Username</th>
+                        <th>Course</th>
+                        <th>Subject</th>
+                        <th>Present</th>
+                        <th>Absent</th>
+                        <th>Total</th>
+                        <th>Percentage</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in summary %}
+                    {% set total_count = row.total_count or 0 %}
+                    {% set present_count = row.present_count or 0 %}
+                    {% set absent_count = row.absent_count or 0 %}
+                    <tr>
+                        <td>{{ row.id }}</td>
+                        <td>{{ row.name }}</td>
+                        <td>{{ row.username or '-' }}</td>
+                        <td>{{ row.course or '-' }}</td>
+                        <td>{{ row.subject or '-' }}</td>
+                        <td>{{ present_count }}</td>
+                        <td>{{ absent_count }}</td>
+                        <td>{{ total_count }}</td>
+                        <td>{% if total_count %}{{ ((present_count * 100) / total_count) | round(0) }}%{% else %}0%{% endif %}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="9" class="empty-copy">No teacher attendance summary available.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="stats-row" style="margin-top:22px; align-items:stretch;">
+            <div class="stat-card">
+                <div class="stat-label">Present Vs Absent</div>
+                <div style="width:min(100%, 340px); margin:18px auto 0;">
+                    <canvas id="teacherSummaryChart"></canvas>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Teacher Wise Attendance</div>
+                <div style="width:min(100%, 520px); margin:18px auto 0;">
+                    <canvas id="teacherBarChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-shell">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Username</th>
+                        <th>Course</th>
+                        <th>Subject</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in details %}
+                    <tr>
+                        <td>{{ row.date|display_date }}</td>
+                        <td>{{ row.teacher_id }}</td>
+                        <td>{{ row.name }}</td>
+                        <td>{{ row.username or '-' }}</td>
+                        <td>{{ row.course or '-' }}</td>
+                        <td>{{ row.subject or '-' }}</td>
+                        <td>{{ row.status }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="empty-copy">No teacher attendance rows found for this filter.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+    const totalPresent = Number("{{ total_present }}");
+    const totalAbsent = Number("{{ total_absent }}");
+    const chartLabels = {{ chart_labels | tojson }};
+    const chartPresent = {{ chart_present | tojson }};
+    const chartAbsent = {{ chart_absent | tojson }};
+
+    const summaryCtx = document.getElementById("teacherSummaryChart").getContext("2d");
+    new Chart(summaryCtx, {
+        type: "pie",
+        data: {
+            labels: ["Present", "Absent"],
+            datasets: [{
+                data: [totalPresent, totalAbsent],
+                backgroundColor: ["#15803d", "#b91c1c"]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true
+        }
+    });
+
+    const barCtx = document.getElementById("teacherBarChart").getContext("2d");
+    new Chart(barCtx, {
+        type: "bar",
+        data: {
+            labels: chartLabels,
+            datasets: [
+                {
+                    label: "Present",
+                    data: chartPresent,
+                    backgroundColor: "#15803d"
+                },
+                {
+                    label: "Absent",
+                    data: chartAbsent,
+                    backgroundColor: "#b91c1c"
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        precision: 0
+                    }
+                }
+            }
+        }
+    });
+    </script>
+</body>
+</html>
