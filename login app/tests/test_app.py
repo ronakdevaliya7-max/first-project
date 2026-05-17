@@ -80,6 +80,13 @@ class AttendanceAppTests(unittest.TestCase):
             follow_redirects=False,
         )
 
+    def login_student(self, username="student1", password="pass1234"):
+        return self.client.post(
+            "/student_login",
+            data={"username": username, "password": password},
+            follow_redirects=False,
+        )
+
     def insert_teacher(self, name, username, course="BCA", subject="Python"):
         with self.app_module.db() as con:
             con.execute(
@@ -322,6 +329,47 @@ class AttendanceAppTests(unittest.TestCase):
         self.assertEqual(report["present"], 3)
         self.assertEqual(report["absent"], 5)
         self.assertEqual(report["percent"], 38)
+
+    def test_student_result_is_visible_after_admin_declares_it(self):
+        student_id = self.insert_student(username="result_student", rollno=18)
+
+        with self.app_module.db() as con:
+            con.execute(
+                """
+                INSERT INTO exam_cia_marks(student_id, class_num, subject, marks, total_marks, exam_term, entered_by)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                (student_id, "10", "PHP", 20, 25, "CIA", "admin"),
+            )
+            con.execute(
+                """
+                INSERT INTO exam_cia_marks(student_id, class_num, subject, marks, total_marks, exam_term, entered_by)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                (student_id, "10", "PHP", 40, 50, "SEE", "admin"),
+            )
+
+        self.login_student("result_student")
+        pending_response = self.client.get("/student_result", follow_redirects=False)
+        self.assertEqual(pending_response.status_code, 200)
+        self.assertIn(b"Result Not Declared", pending_response.data)
+
+        self.client.get("/logout", follow_redirects=False)
+        self.login_admin()
+        declare_response = self.client.post(
+            "/admin_results",
+            data={"class_num": "10", "action": "declare"},
+            follow_redirects=False,
+        )
+        self.assertEqual(declare_response.status_code, 200)
+
+        self.client.get("/logout", follow_redirects=False)
+        self.login_student("result_student")
+        result_response = self.client.get("/student_result", follow_redirects=False)
+        self.assertEqual(result_response.status_code, 200)
+        self.assertIn(b"ATMIYA UNIVERSITY", result_response.data)
+        self.assertIn(b"PHP", result_response.data)
+        self.assertIn(b"60.0 / 75", result_response.data)
 
     def test_admin_dashboard_requires_admin_session(self):
         response = self.client.get("/admin", follow_redirects=False)

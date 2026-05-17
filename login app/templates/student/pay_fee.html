@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ fee_type }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="app-layout">
+        {% include "student/_sidebar.html" %}
+
+        <main class="app-main">
+            <section class="dashboard-hero">
+                <div class="section-title" style="color:#fde68a;">Fees</div>
+                <h1 style="margin:0;">{{ fee_type }}</h1>
+                <p>Submit fee details for Class {{ user.class or '-' }}. Your receipt will appear immediately after submission.</p>
+            </section>
+
+            <section class="dashboard-mini-card" style="margin-top:20px;">
+                {% if error %}
+                <div class="form-alert form-alert--error">{{ error }}</div>
+                {% endif %}
+
+                <form method="POST" class="fee-form">
+                    <div class="fee-form-grid">
+                        <div>
+                            <label>Student</label>
+                            <input type="text" value="{{ user.username }}" readonly>
+                        </div>
+                        <div>
+                            <label>Class</label>
+                            <input type="text" value="{{ user.class or '-' }}" readonly>
+                        </div>
+                        <div>
+                            <label>Amount</label>
+                            <input type="number" name="amount" min="1" step="0.01" required placeholder="Enter amount">
+                        </div>
+                        <div>
+                            <label>Payment Method</label>
+                            <select name="payment_method" required>
+                                <option value="">Select method</option>
+                                <option value="UPI">UPI</option>
+                                <option value="Card">Card</option>
+                                <option value="Net Banking">Net Banking</option>
+                                <option value="Cash">Cash</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <label>Remarks</label>
+                    <textarea name="remarks" rows="4" placeholder="Optional note"></textarea>
+
+                    <div class="action-row">
+                        <button type="submit" class="primary-link"><i class="fa-solid fa-paper-plane"></i> Submit Fee</button>
+                        <a href="/fee_receipt" class="secondary-link">View Receipts</a>
+                    </div>
+                </form>
+            </section>
+        </main>
+    </div>
+</body>
+</html>

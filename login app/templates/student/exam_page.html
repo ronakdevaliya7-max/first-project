@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ page.title }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="app-layout">
+        {% include "student/_sidebar.html" %}
+
+        <main class="app-main">
+            <section class="dashboard-hero">
+                <div class="section-title" style="color:#fde68a;">Exam</div>
+                <h1 style="margin:0;">{{ page.title }}</h1>
+                <p>{{ page.description }} Class {{ user.class or '-' }} | Enrollment {{ user.enroll or '-' }}</p>
+            </section>
+
+            <section class="dashboard-mini-card" style="margin-top:20px;">
+                {% if message %}
+                <div class="form-feedback form-feedback--success">{{ message }}</div>
+                {% endif %}
+
+                {% if page.kind == "course" %}
+                <form method="post" class="fee-form">
+                    <div class="table-toolbar" style="padding:0 0 18px;">
+                        <div>
+                            <div class="label">Subjects</div>
+                            <h3>Select courses for exam</h3>
+                        </div>
+                    </div>
+                    <div class="fee-form-grid">
+                        {% for subject in subjects %}
+                        <label class="dashboard-stat-card" style="cursor:pointer;">
+                            <span class="label">{{ subject }}</span>
+                            <span class="value" style="font-size:18px;">
+                                <input type="checkbox" name="subjects" value="{{ subject }}" {% if subject in selected_subjects %}checked{% endif %}>
+                                Select
+                            </span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                    <div class="action-row">
+                        <button type="submit" class="primary-link"><i class="fa-solid fa-check"></i> Save Selection</button>
+                    </div>
+                </form>
+
+                {% elif page.kind == "form" %}
+                <form method="post" class="fee-form">
+                    <div class="fee-form-grid">
+                        <div>
+                            <label>Student Name</label>
+                            <input type="text" value="{{ user.username }}" readonly>
+                        </div>
+                        <div>
+                            <label>Class</label>
+                            <input type="text" value="{{ user.class or '-' }}" readonly>
+                        </div>
+                        <div>
+                            <label>Enrollment No</label>
+                            <input type="text" value="{{ user.enroll or '-' }}" readonly>
+                        </div>
+                        <div>
+                            <label>Exam Type</label>
+                            <input type="text" value="{{ page.title }}" readonly>
+                        </div>
+                    </div>
+                    <label>Subjects</label>
+                    <select name="subjects" multiple required>
+                        {% for subject in subjects %}
+                        <option value="{{ subject }}">{{ subject }}</option>
+                        {% endfor %}
+                    </select>
+                    <div class="action-row">
+                        <button type="submit" class="primary-link"><i class="fa-solid fa-paper-plane"></i> Submit Form</button>
+                    </div>
+                </form>
+
+                {% elif page.kind == "schedule" %}
+                <div class="table-toolbar" style="padding:0 0 18px;">
+                    <div>
+                        <div class="label">Hall Ticket</div>
+                        <h3>{{ user.username }} | Seat No: {{ user.rollno or user.id }}</h3>
+                    </div>
+                    <a href="#" class="topbar-chip"><i class="fa-solid fa-print"></i> Print</a>
+                </div>
+                <div class="table-shell table-shell--scroll">
+                    <table>
+                        <thead><tr><th>Date</th><th>Time</th><th>Subject</th><th>Room</th></tr></thead>
+                        <tbody>
+                            {% for row in exam_rows %}
+                            <tr><td>{{ row.date }}</td><td>{{ row.time }}</td><td>{{ row.subject }}</td><td>Lab 208</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% elif page.kind == "marks" %}
+                <div class="table-shell table-shell--scroll">
+                    <table>
+                        <thead><tr><th>Subject</th><th>CIA Marks</th><th>Total</th><th>Status</th></tr></thead>
+                        <tbody>
+                            {% for row in marks_rows %}
+                            <tr>
+                                <td>{{ row.subject }}</td>
+                                <td>{{ row.marks }}</td>
+                                <td>{{ row.total_marks }}</td>
+                                <td><span class="status-pill status-pill--approved">Published</span></td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="empty-copy">CIA marks are not published yet.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% elif page.kind == "result" %}
+                <form method="post" class="fee-form">
+                    <div class="dashboard-stat-grid">
+                        <div class="dashboard-stat-card">
+                            <div class="label">Result Status</div>
+                            <div class="value" style="font-size:22px;">Pending</div>
+                        </div>
+                        <div class="dashboard-stat-card">
+                            <div class="label">Reassessment</div>
+                            <div class="value" style="font-size:22px;">Open</div>
+                        </div>
+                    </div>
+                    <label>Subject for Reassessment</label>
+                    <select name="subjects" required>
+                        {% for subject in subjects %}
+                        <option value="{{ subject }}">{{ subject }}</option>
+                        {% endfor %}
+                    </select>
+                    <label>Reason</label>
+                    <textarea name="reason" rows="4" placeholder="Write reassessment reason"></textarea>
+                    <div class="action-row">
+                        <button type="submit" class="primary-link"><i class="fa-solid fa-paper-plane"></i> Apply</button>
+                    </div>
+                </form>
+
+                {% elif page.kind == "login" %}
+                <div class="profile-stack">
+                    <div class="profile-stack-item"><span>Portal URL</span><strong>exam.college.local</strong></div>
+                    <div class="profile-stack-item"><span>Login ID</span><strong>{{ user.enroll or user.username }}</strong></div>
+                    <div class="profile-stack-item"><span>Password</span><strong>{{ user.birthdate|display_date }}</strong></div>
+                    <div class="profile-stack-item"><span>Class</span><strong>{{ user.class or '-' }}</strong></div>
+                </div>
+                {% endif %}
+            </section>
+        </main>
+    </div>
+</body>
+</html>

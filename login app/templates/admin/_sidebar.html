@@ -1,8 +1,8 @@
 {% set path = request.path %}
 {% set attendance_open = path in ['/attendance', '/attendance_by_class', '/manage_timetable', '/weekly_attendance'] or path.startswith('/mark_class_attendance') %}
-{% set students_open = path in ['/signup', '/list', '/students_by_class'] or path.startswith('/students_in_class') %}
+{% set students_open = path in ['/signup', '/list', '/students_by_class', '/fee_status'] or path.startswith('/students_in_class') or path.startswith('/fee_status/') %}
 {% set teachers_open = path in ['/add_teacher', '/teachers', '/teacher_attendance'] or path.startswith('/edit_teacher') %}
-{% set class_management_open = path in ['/class_reports', '/class_subjects', '/class_timetable', '/class_notifications'] or path.startswith('/manage_class_subjects') or path.startswith('/manage_class_timetable') or path.startswith('/manage_class_notifications') %}
+{% set class_management_open = path in ['/class_reports', '/class_subjects', '/class_timetable', '/class_notifications', '/admin_cia_marks', '/admin_results'] or path.startswith('/manage_class_subjects') or path.startswith('/manage_class_timetable') or path.startswith('/manage_class_notifications') or path.startswith('/admin_result/') %}
 <aside class="app-sidebar">
     <div class="app-brand">
         <div class="app-brand-badge">A</div>
@@ -39,6 +39,7 @@
                 <a href="/signup" class="accordion-item{% if path == '/signup' %} is-active{% endif %}"><i class="fa-solid fa-user-plus"></i> Add Student</a>
                 <a href="/list" class="accordion-item{% if path == '/list' %} is-active{% endif %}"><i class="fa-solid fa-list"></i> View All</a>
                 <a href="/students_by_class" class="accordion-item{% if path == '/students_by_class' or path.startswith('/students_in_class') %} is-active{% endif %}"><i class="fa-solid fa-layer-group"></i> By Class</a>
+                <a href="/fee_status" class="accordion-item{% if path == '/fee_status' or path.startswith('/fee_status/') %} is-active{% endif %}"><i class="fa-solid fa-receipt"></i> Fee Status</a>
             </div>
         </div>
 
@@ -63,6 +64,8 @@
                 <a href="/class_reports" class="accordion-item{% if path == '/class_reports' %} is-active{% endif %}"><i class="fa-solid fa-chart-bar"></i> Class Reports</a>
                 <a href="/class_subjects" class="accordion-item{% if path == '/class_subjects' or path.startswith('/manage_class_subjects') %} is-active{% endif %}"><i class="fa-solid fa-book"></i> Class Subjects</a>
                 <a href="/class_timetable" class="accordion-item{% if path == '/class_timetable' or path.startswith('/manage_class_timetable') %} is-active{% endif %}"><i class="fa-solid fa-calendar"></i> Class Timetable</a>
+                <a href="/admin_cia_marks" class="accordion-item{% if path == '/admin_cia_marks' or path == '/admin_see_marks' %} is-active{% endif %}"><i class="fa-solid fa-clipboard-list"></i> CIA / SEE Marks</a>
+                <a href="/admin_results" class="accordion-item{% if path == '/admin_results' or path.startswith('/admin_result/') %} is-active{% endif %}"><i class="fa-solid fa-square-poll-vertical"></i> Declare Result</a>
                 <a href="/class_notifications" class="accordion-item{% if path == '/class_notifications' or path.startswith('/manage_class_notifications') %} is-active{% endif %}"><i class="fa-solid fa-bell"></i> Notifications</a>
             </div>
         </div>

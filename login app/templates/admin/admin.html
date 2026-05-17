@@ -60,6 +60,10 @@
                                 <span>Reports Ready</span>
                                 <strong>{{ reports_ready }}</strong>
                             </a>
+                            <a href="/fee_status" class="admin-inline-card">
+                                <span>Fee Paid</span>
+                                <strong>{{ paid_fee_count }}</strong>
+                            </a>
                         </div>
                     </div>
 
@@ -125,6 +129,10 @@
                     <div class="label">Classes</div>
                     <div class="value">{{ open_modules }}</div>
                 </a>
+                <a href="/fee_status" class="dashboard-stat-card">
+                    <div class="label">Fee Paid Students</div>
+                    <div class="value">{{ paid_fee_count }}</div>
+                </a>
                 <a href="/festivals" class="dashboard-stat-card">
                     <div class="label">Next Festival</div>
                     <div class="value" style="font-size:22px;">{{ next_festival["name"] if next_festival else "No Festival" }}</div>
@@ -155,6 +163,16 @@
                             <i class="fa-solid fa-chart-bar"></i>
                             <strong>View Reports</strong>
                             <span>Check class-wise attendance and performance reports.</span>
+                        </a>
+                        <a href="/fee_status" class="quick-link-card quick-link-card--teal">
+                            <i class="fa-solid fa-receipt"></i>
+                            <strong>Fee Status</strong>
+                            <span>See class-wise names of students whose fees are paid.</span>
+                        </a>
+                        <a href="/admin_cia_marks" class="quick-link-card quick-link-card--navy">
+                            <i class="fa-solid fa-clipboard-list"></i>
+                            <strong>CIA Marks / Result</strong>
+                            <span>Review and update exam marks for all classes.</span>
                         </a>
                         <a href="/festivals" class="quick-link-card quick-link-card--teal">
                             <i class="fa-solid fa-calendar-star"></i>

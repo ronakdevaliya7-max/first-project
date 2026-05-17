@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fee Receipt</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="app-layout">
+        {% include "student/_sidebar.html" %}
+
+        <main class="app-main">
+            <section class="dashboard-hero">
+                <div class="section-title" style="color:#fde68a;">Fees</div>
+                <h1 style="margin:0;">Fee Receipt</h1>
+                <p>Receipts are shown only for {{ user.username }} from Class {{ user.class or '-' }}.</p>
+            </section>
+
+            {% if submitted %}
+            <div class="form-alert form-alert--success" style="margin-top:20px;">
+                Fee submitted successfully. Receipt No: {{ submitted_receipt }}
+            </div>
+            {% endif %}
+
+            <section class="table-shell" style="margin-top:20px;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Receipt No</th>
+                            <th>Fee Type</th>
+                            <th>Amount</th>
+                            <th>Method</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for receipt in receipts %}
+                        <tr>
+                            <td>{{ receipt.receipt_no or '-' }}</td>
+                            <td>{{ receipt.fee_type }}</td>
+                            <td>Rs. {{ '%.2f'|format(receipt.amount or 0) }}</td>
+                            <td>{{ receipt.payment_method or '-' }}</td>
+                            <td><span class="status-pill status-pill--pending">{{ receipt.status or 'Pending' }}</span></td>
+                            <td>{{ receipt.created_at }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="empty-copy">No fee receipts found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </section>
+        </main>
+    </div>
+</body>
+</html>

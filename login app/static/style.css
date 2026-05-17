@@ -1064,7 +1064,8 @@ tbody tr:hover{
     margin:20px 0 0;
 }
 
-.action-row a{
+.action-row a,
+.action-row button{
     display:inline-flex;
     align-items:center;
     justify-content:center;
@@ -1076,6 +1077,10 @@ tbody tr:hover{
 .action-row .primary-link{
     background:linear-gradient(135deg, var(--primary), var(--primary-deep));
     color:white;
+    border:none;
+    cursor:pointer;
+    font-family:var(--font-sans);
+    font-size:14px;
 }
 
 .action-row .secondary-link{
@@ -1695,6 +1700,12 @@ tbody tr:hover{
     box-shadow:none;
 }
 
+.accordion-btn span{
+    display:flex;
+    align-items:center;
+    gap:12px;
+}
+
 .accordion-btn:hover{
     transform:none;
     opacity:1;
@@ -1765,6 +1776,42 @@ tbody tr:hover{
     background:rgba(59,130,246,0.22);
     color:#fff;
     border:1px solid rgba(96,165,250,0.28);
+}
+
+.fee-form{
+    display:grid;
+    gap:18px;
+}
+
+.fee-form-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+    gap:16px;
+}
+
+.fee-form input,
+.fee-form select,
+.fee-form textarea{
+    width:100%;
+    padding:13px 14px;
+    border:1px solid var(--line);
+    border-radius:14px;
+    background:var(--surface-soft);
+    color:var(--text);
+    font-family:var(--font-sans);
+    font-size:14px;
+}
+
+.fee-form input:focus,
+.fee-form select:focus,
+.fee-form textarea:focus{
+    outline:none;
+    border-color:rgba(180,83,9,0.5);
+    box-shadow:0 0 0 3px rgba(180,83,9,0.12);
+}
+
+.fee-form input[readonly]{
+    color:var(--muted);
 }
 
 .sidebar-footer{

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Result Pending</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="app-layout">
+        {% include "student/_sidebar.html" %}
+        <main class="app-main">
+            <section class="dashboard-hero">
+                <div class="section-title" style="color:#fde68a;">Exam</div>
+                <h1 style="margin:0;">Result Not Declared</h1>
+                <p>Your result will be visible here after admin declares it for Class {{ user.class or '-' }}.</p>
+            </section>
+            <section class="dashboard-mini-card" style="margin-top:20px;">
+                <div class="empty-copy">Please check again after the result declaration.</div>
+            </section>
+        </main>
+    </div>
+</body>
+</html>

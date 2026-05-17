@@ -9,9 +9,10 @@ from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "attendance-dev-secret")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 app.config["DATABASE_PATH"] = os.environ.get(
     "ATTENDANCE_DB_PATH",
-    os.path.join(os.getcwd(), "users.db")
+    os.path.join(BASE_DIR, "users.db")
 )
 app.jinja_env.filters["display_date"] = lambda value: format_display_date(value)
 
@@ -106,7 +107,44 @@ TIMETABLE_ROWS = [
         },
     },
 ]
-UPLOAD_FOLDER = os.path.join(os.getcwd(), "uploads")
+EXAM_PAGES = {
+    "course_selection": {
+        "title": "Course Selection",
+        "description": "Select your exam courses for the current term.",
+        "kind": "course",
+    },
+    "regular_form": {
+        "title": "Regular Exam Form",
+        "description": "Fill your regular exam form details before submission.",
+        "kind": "form",
+    },
+    "schedule_hall_ticket": {
+        "title": "Exam Schedule / Hall Ticket",
+        "description": "Check your exam schedule and hall ticket information.",
+        "kind": "schedule",
+    },
+    "cia_marks": {
+        "title": "CIA Marks",
+        "description": "Review internal assessment marks for selected subjects.",
+        "kind": "marks",
+    },
+    "repeater_form": {
+        "title": "Repeater Exam Form",
+        "description": "Apply for repeater exam subjects and keep the form ready.",
+        "kind": "form",
+    },
+    "result_reassessment": {
+        "title": "Result and Reassessment",
+        "description": "View result status and apply for reassessment when available.",
+        "kind": "result",
+    },
+    "online_login": {
+        "title": "Online Exam Login Detail",
+        "description": "Find online exam login details and exam portal instructions.",
+        "kind": "login",
+    },
+}
+UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
@@ -883,6 +921,65 @@ def initialize_database():
         )
         """)
 
+        con.execute("""
+        CREATE TABLE IF NOT EXISTS fee_payments(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            student_id INTEGER,
+            class_num TEXT,
+            fee_type TEXT,
+            amount REAL,
+            payment_method TEXT,
+            remarks TEXT,
+            status TEXT DEFAULT 'Pending',
+            receipt_no TEXT,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+        """)
+
+        con.execute("""
+        CREATE TABLE IF NOT EXISTS student_messages(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            student_id INTEGER,
+            subject TEXT,
+            message TEXT,
+            message_type TEXT DEFAULT 'General',
+            is_read INTEGER DEFAULT 0,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+        """)
+
+        con.execute("""
+        CREATE TABLE IF NOT EXISTS exam_cia_marks(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            student_id INTEGER,
+            class_num TEXT,
+            subject TEXT,
+            marks REAL,
+            total_marks REAL DEFAULT 25,
+            exam_term TEXT DEFAULT 'CIA',
+            entered_by TEXT,
+            remarks TEXT,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(student_id, subject, exam_term)
+        )
+        """)
+
+        con.execute("""
+        CREATE TABLE IF NOT EXISTS exam_result_declarations(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            class_num TEXT,
+            exam_term TEXT DEFAULT 'Sem - III',
+            examination TEXT DEFAULT 'November - 2025',
+            programme TEXT DEFAULT 'Bachelor of Computer Application',
+            is_declared INTEGER DEFAULT 0,
+            declared_by TEXT,
+            declared_at TEXT,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(class_num, exam_term)
+        )
+        """)
+
         admin_user = con.execute("SELECT * FROM users WHERE username=?", ("admin",)).fetchone()
         if not admin_user:
             con.execute("""
@@ -1019,11 +1116,11 @@ def get_lecture_attendance_rows(con, where_clause="", params=()):
                 ORDER BY lecture_no
             ) AS slot_no
         FROM (
-            SELECT DISTINCT date, lecture_no
-            FROM lecture_attendance
+                SELECT DISTINCT date, lecture_no
+                FROM lecture_attendance
+            )
         )
-    )
-    SELECT
+        SELECT
         lecture_attendance.date,
         COALESCE(
             NULLIF(lecture_attendance.lecture_day, ''),
@@ -1991,6 +2088,22 @@ def home():
             "SELECT * FROM users WHERE username=?",
             (session["user"],)
         ).fetchone()
+        if user is None:
+            session.clear()
+            return redirect("/")
+
+        ensure_pending_fee_message(con, user)
+        fee_messages = con.execute(
+            """
+            SELECT *
+            FROM student_messages
+            WHERE student_id=? AND message_type='Fee Reminder'
+            ORDER BY created_at DESC, id DESC
+            LIMIT 3
+            """,
+            (user["id"],)
+        ).fetchall()
+        has_pending_fee = not student_has_paid_fee(con, user["id"], "Academic Fee")
 
         total = con.execute(
             "SELECT COUNT(*) FROM users WHERE role='student'"
@@ -2036,7 +2149,853 @@ def home():
         latest_leave_status=latest_leave_status,
         recent_leaves=recent_leaves,
         upcoming_lectures=upcoming_lectures,
+        fee_messages=fee_messages,
+        has_pending_fee=has_pending_fee,
         weekly_timetable=get_weekly_timetable(),
+    )
+
+
+def get_student_or_redirect():
+    if "user" not in session:
+        return None, redirect("/")
+    if session.get("role") != "student":
+        return None, redirect_for_role(session.get("role"))
+
+    user = current_user()
+    if user is None:
+        session.clear()
+        return None, redirect("/")
+
+    return user, None
+
+
+def build_receipt_no(payment_id):
+    return f"FEE-{date.today().strftime('%Y%m%d')}-{payment_id:04d}"
+
+
+def normalize_gender_group(gender):
+    value = (gender or "").strip().lower()
+    if value in {"male", "boy", "boys"}:
+        return "boys"
+    if value in {"female", "girl", "girls"}:
+        return "girls"
+    return "other"
+
+
+def student_has_paid_fee(con, student_id, fee_type="Academic Fee"):
+    return con.execute(
+        """
+        SELECT 1
+        FROM fee_payments
+        WHERE student_id=? AND fee_type=?
+        LIMIT 1
+        """,
+        (student_id, fee_type)
+    ).fetchone() is not None
+
+
+def clear_fee_reminders(con, student_id):
+    con.execute(
+        """
+        DELETE FROM student_messages
+        WHERE student_id=? AND message_type='Fee Reminder'
+        """,
+        (student_id,)
+    )
+
+
+def ensure_pending_fee_message(con, student):
+    if not student:
+        return None
+
+    if student_has_paid_fee(con, student["id"], "Academic Fee"):
+        clear_fee_reminders(con, student["id"])
+        return None
+
+    existing = con.execute(
+        """
+        SELECT *
+        FROM student_messages
+        WHERE student_id=?
+          AND message_type='Fee Reminder'
+        ORDER BY id DESC
+        LIMIT 1
+        """,
+        (student["id"],)
+    ).fetchone()
+    if existing:
+        return existing
+
+    subject = "Fee Pending Reminder"
+    message = (
+        f"Dear {student['username']}, your Academic Fee for Class {student['class'] or '-'} "
+        "is still pending. Please pay it from the Fee section as soon as possible."
+    )
+    cursor = con.execute(
+        """
+        INSERT INTO student_messages(student_id, subject, message, message_type)
+        VALUES (?, ?, ?, ?)
+        """,
+        (student["id"], subject, message, "Fee Reminder")
+    )
+    return con.execute(
+        "SELECT * FROM student_messages WHERE id=?",
+        (cursor.lastrowid,)
+    ).fetchone()
+
+
+def get_cia_marks_rows(con, student_id=None, class_num=None, exam_term=None):
+    filters = []
+    params = []
+    if student_id is not None:
+        filters.append("users.id=?")
+        params.append(student_id)
+    if class_num:
+        filters.append("users.class=?")
+        params.append(str(class_num))
+    if exam_term:
+        filters.append("exam_cia_marks.exam_term=?")
+        params.append(exam_term)
+
+    where_sql = " AND " + " AND ".join(filters) if filters else ""
+    return con.execute(
+        f"""
+        SELECT
+            exam_cia_marks.*,
+            users.username,
+            users.rollno,
+            users.enroll,
+            users.class
+        FROM exam_cia_marks
+        JOIN users ON users.id = exam_cia_marks.student_id
+        WHERE users.role='student'
+        {where_sql}
+        ORDER BY CAST(users.class AS INTEGER), users.class, users.rollno, users.username, exam_cia_marks.subject, exam_cia_marks.exam_term
+        """,
+        tuple(params)
+    ).fetchall()
+
+
+def get_result_declaration(con, class_num, exam_term="Sem - III"):
+    row = con.execute(
+        """
+        SELECT *
+        FROM exam_result_declarations
+        WHERE class_num=? AND exam_term=?
+        """,
+        (str(class_num or ""), exam_term)
+    ).fetchone()
+    if row:
+        return row
+
+    con.execute(
+        """
+        INSERT OR IGNORE INTO exam_result_declarations(class_num, exam_term)
+        VALUES (?, ?)
+        """,
+        (str(class_num or ""), exam_term)
+    )
+    return con.execute(
+        """
+        SELECT *
+        FROM exam_result_declarations
+        WHERE class_num=? AND exam_term=?
+        """,
+        (str(class_num or ""), exam_term)
+    ).fetchone()
+
+
+def build_student_result(con, student, exam_term="Sem - III"):
+    marks = get_cia_marks_rows(con, student_id=student["id"])
+    marks_by_subject = {}
+    for row in marks:
+        subject_bucket = marks_by_subject.setdefault(row["subject"], {})
+        subject_bucket[row["exam_term"]] = row
+
+    result_rows = []
+
+    for index, subject in enumerate(sorted(marks_by_subject), start=1):
+        subject_marks = marks_by_subject[subject]
+        cia_row = subject_marks.get("CIA")
+        see_row = subject_marks.get("SEE")
+        cia_marks = float(cia_row["marks"] or 0) if cia_row else None
+        cia_total = float(cia_row["total_marks"] or 25) if cia_row else 25
+        see_marks = float(see_row["marks"] or 0) if see_row else None
+        see_total = float(see_row["total_marks"] or 50) if see_row else 50
+        total_marks = (cia_marks or 0) + (see_marks or 0)
+        max_marks = (cia_total if cia_row else 0) + (see_total if see_row else 0)
+        result_rows.append({
+            "course_code": f"24UGCA{300 + index}",
+            "subject": subject,
+            "cia_marks": cia_marks if cia_row else "-",
+            "cia_total": cia_total,
+            "see_marks": see_marks if see_row else "-",
+            "see_total": see_total,
+            "total_marks": total_marks,
+            "max_marks": max_marks,
+            "result": "P" if max_marks and total_marks >= (max_marks * 0.35) else "RA",
+        })
+
+    earned = sum(row["total_marks"] for row in result_rows)
+    maximum = sum(row["max_marks"] for row in result_rows)
+    percentage = round((earned * 100 / maximum), 2) if maximum else 0
+    sgpa = round(percentage / 10, 2) if percentage else 0
+
+    return {
+        "rows": result_rows,
+        "earned": earned,
+        "maximum": maximum,
+        "percentage": percentage,
+        "sgpa": sgpa,
+        "status": "PASS" if result_rows and all(row["result"] == "P" for row in result_rows) else "PENDING",
+        "declaration": get_result_declaration(con, student["class"], exam_term),
+    }
+
+
+def get_fee_status_data(con, fee_type="all", class_num=None):
+    fee_type = (fee_type or "all").strip()
+    payment_filter = ""
+    params = []
+
+    if fee_type != "all":
+        payment_filter = " AND fee_type=?"
+        params.append(fee_type)
+
+    class_filter = ""
+    if class_num:
+        class_filter = " AND users.class=?"
+        params.append(str(class_num))
+
+    students = con.execute(
+        f"""
+        SELECT
+            users.id,
+            users.rollno,
+            users.username,
+            users.gender,
+            users.class,
+            COALESCE(SUM(fee_payments.amount), 0) AS paid_amount,
+            COUNT(fee_payments.id) AS payment_count,
+            MAX(fee_payments.created_at) AS latest_payment,
+            MAX(fee_payments.receipt_no) AS latest_receipt
+        FROM users
+        LEFT JOIN fee_payments
+            ON fee_payments.student_id = users.id
+            {payment_filter}
+        WHERE users.role='student'
+        {class_filter}
+        GROUP BY users.id
+        ORDER BY CAST(users.class AS INTEGER), users.class, users.rollno, users.username
+        """,
+        tuple(params)
+    ).fetchall()
+
+    summary_map = {}
+    totals = {
+        "students": 0,
+        "paid": 0,
+        "pending": 0,
+        "boys": 0,
+        "girls": 0,
+        "boys_paid": 0,
+        "girls_paid": 0,
+        "boys_pending": 0,
+        "girls_pending": 0,
+        "amount": 0,
+    }
+
+    detail_rows = []
+    for student in students:
+        student_class = student["class"] or "-"
+        gender_group = normalize_gender_group(student["gender"])
+        is_paid = (student["payment_count"] or 0) > 0
+
+        if student_class not in summary_map:
+            summary_map[student_class] = {
+                "class_num": student_class,
+                "students": 0,
+                "paid": 0,
+                "pending": 0,
+                "boys": 0,
+                "girls": 0,
+                "boys_paid": 0,
+                "girls_paid": 0,
+                "boys_pending": 0,
+                "girls_pending": 0,
+                "amount": 0,
+            }
+
+        bucket = summary_map[student_class]
+        for target in (bucket, totals):
+            target["students"] += 1
+            target["amount"] += student["paid_amount"] or 0
+            if is_paid:
+                target["paid"] += 1
+            else:
+                target["pending"] += 1
+
+            if gender_group == "boys":
+                target["boys"] += 1
+                target["boys_paid" if is_paid else "boys_pending"] += 1
+            elif gender_group == "girls":
+                target["girls"] += 1
+                target["girls_paid" if is_paid else "girls_pending"] += 1
+
+        detail_rows.append({
+            "id": student["id"],
+            "rollno": student["rollno"],
+            "username": student["username"],
+            "gender": student["gender"] or "-",
+            "class": student_class,
+            "paid_amount": student["paid_amount"] or 0,
+            "payment_count": student["payment_count"] or 0,
+            "latest_payment": student["latest_payment"] or "-",
+            "latest_receipt": student["latest_receipt"] or "-",
+            "status": "Fee Paid" if is_paid else "Pending",
+            "is_paid": is_paid,
+        })
+
+    def class_sort_key(item):
+        value = item["class_num"]
+        try:
+            return (0, int(value))
+        except (TypeError, ValueError):
+            return (1, str(value))
+
+    return sorted(summary_map.values(), key=class_sort_key), detail_rows, totals
+
+
+@app.route("/fee_status")
+@app.route("/fee_status/<class_num>")
+def fee_status(class_num=None):
+    if "user" not in session:
+        return redirect("/")
+    if session.get("role") not in ("admin", "teacher"):
+        return redirect_for_role(session.get("role"))
+
+    fee_type = request.args.get("fee_type", "all").strip() or "all"
+    valid_fee_types = ["all", "Academic Fee", "Transport Fee"]
+    if fee_type not in valid_fee_types:
+        fee_type = "all"
+
+    with db() as con:
+        summary_rows, student_rows, totals = get_fee_status_data(con, fee_type, class_num)
+
+    return render_template(
+        "shared/fee_status.html",
+        role=session.get("role"),
+        fee_type=fee_type,
+        fee_type_options=valid_fee_types,
+        selected_class=class_num,
+        summary_rows=summary_rows,
+        student_rows=student_rows,
+        totals=totals,
+    )
+
+
+@app.route("/pay_fee", methods=["GET", "POST"])
+def pay_fee():
+    user, redirect_response = get_student_or_redirect()
+    if redirect_response:
+        return redirect_response
+
+    message = ""
+    error = ""
+
+    if request.method == "POST":
+        try:
+            amount = float(request.form.get("amount", "0"))
+        except ValueError:
+            amount = 0
+
+        payment_method = request.form.get("payment_method", "").strip()
+        remarks = request.form.get("remarks", "").strip()
+
+        if amount <= 0:
+            error = "Please enter a valid fee amount."
+        elif not payment_method:
+            error = "Please select a payment method."
+        else:
+            with db() as con:
+                cur = con.execute(
+                    """
+                    INSERT INTO fee_payments(
+                        student_id, class_num, fee_type, amount, payment_method, remarks, status
+                    )
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (user["id"], user["class"] or "", "Academic Fee", amount, payment_method, remarks, "Submitted")
+                )
+                receipt_no = build_receipt_no(cur.lastrowid)
+                con.execute(
+                    "UPDATE fee_payments SET receipt_no=? WHERE id=?",
+                    (receipt_no, cur.lastrowid)
+                )
+                clear_fee_reminders(con, user["id"])
+
+            return redirect(f"/fee_receipt?submitted=1&receipt={receipt_no}")
+
+    return render_template(
+        "student/pay_fee.html",
+        user=user,
+        message=message,
+        error=error,
+        fee_type="Academic Fee",
+        form_action="/pay_fee",
+    )
+
+
+@app.route("/pay_transport_fee", methods=["GET", "POST"])
+def pay_transport_fee():
+    user, redirect_response = get_student_or_redirect()
+    if redirect_response:
+        return redirect_response
+
+    error = ""
+
+    if request.method == "POST":
+        try:
+            amount = float(request.form.get("amount", "0"))
+        except ValueError:
+            amount = 0
+
+        payment_method = request.form.get("payment_method", "").strip()
+        remarks = request.form.get("remarks", "").strip()
+
+        if amount <= 0:
+            error = "Please enter a valid transport fee amount."
+        elif not payment_method:
+            error = "Please select a payment method."
+        else:
+            with db() as con:
+                cur = con.execute(
+                    """
+                    INSERT INTO fee_payments(
+                        student_id, class_num, fee_type, amount, payment_method, remarks, status
+                    )
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (user["id"], user["class"] or "", "Transport Fee", amount, payment_method, remarks, "Submitted")
+                )
+                receipt_no = build_receipt_no(cur.lastrowid)
+                con.execute(
+                    "UPDATE fee_payments SET receipt_no=? WHERE id=?",
+                    (receipt_no, cur.lastrowid)
+                )
+
+            return redirect(f"/fee_receipt?submitted=1&receipt={receipt_no}")
+
+    return render_template(
+        "student/pay_fee.html",
+        user=user,
+        message="",
+        error=error,
+        fee_type="Transport Fee",
+        form_action="/pay_transport_fee",
+    )
+
+
+@app.route("/fee_receipt")
+def fee_receipt():
+    user, redirect_response = get_student_or_redirect()
+    if redirect_response:
+        return redirect_response
+
+    with db() as con:
+        receipts = con.execute(
+            """
+            SELECT *
+            FROM fee_payments
+            WHERE student_id=?
+            ORDER BY created_at DESC, id DESC
+            """,
+            (user["id"],)
+        ).fetchall()
+
+    return render_template(
+        "student/fee_receipt.html",
+        user=user,
+        receipts=receipts,
+        submitted=request.args.get("submitted") == "1",
+        submitted_receipt=request.args.get("receipt", ""),
+    )
+
+
+@app.route("/fee_circular")
+def fee_circular():
+    user, redirect_response = get_student_or_redirect()
+    if redirect_response:
+        return redirect_response
+
+    class_num = user["class"] or ""
+    with db() as con:
+        ensure_pending_fee_message(con, user)
+        fee_messages = con.execute(
+            """
+            SELECT *
+            FROM student_messages
+            WHERE student_id=? AND message_type='Fee Reminder'
+            ORDER BY created_at DESC, id DESC
+            LIMIT 5
+            """,
+            (user["id"],)
+        ).fetchall()
+        circulars = con.execute(
+            """
+            SELECT *
+            FROM class_notifications
+            WHERE CAST(class_num AS TEXT)=?
+              AND (
+                    LOWER(subject) LIKE '%fee%'
+                    OR LOWER(subject) LIKE '%fees%'
+                    OR LOWER(subject) LIKE '%circular%'
+                    OR LOWER(message) LIKE '%fee%'
+                    OR LOWER(message) LIKE '%fees%'
+                  )
+            ORDER BY created_at DESC
+            """,
+            (str(class_num),)
+        ).fetchall()
+
+    return render_template(
+        "student/fee_circular.html",
+        user=user,
+        circulars=circulars,
+        fee_messages=fee_messages,
+        class_num=class_num,
+    )
+
+
+def render_student_result_page(user, page=None):
+    with db() as con:
+        result_data = build_student_result(con, user)
+
+    if not result_data["declaration"] or not result_data["declaration"]["is_declared"]:
+        return render_template(
+            "student/result_pending.html",
+            user=user,
+            page=page or EXAM_PAGES["result_reassessment"],
+            declaration=result_data["declaration"],
+        )
+    return render_template(
+        "shared/result_marksheet.html",
+        role="student",
+        user=user,
+        student=user,
+        result_data=result_data,
+        declaration=result_data["declaration"],
+    )
+
+
+@app.route("/student_result")
+def student_result():
+    user, redirect_response = get_student_or_redirect()
+    if redirect_response:
+        return redirect_response
+
+    return render_student_result_page(user)
+
+
+@app.route("/exam/<page_key>", methods=["GET", "POST"])
+def student_exam_page(page_key):
+    user, redirect_response = get_student_or_redirect()
+    if redirect_response:
+        return redirect_response
+
+    page = EXAM_PAGES.get(page_key)
+    if page is None:
+        return redirect("/exam/course_selection")
+
+    message = ""
+    selected_subjects = request.form.getlist("subjects")
+    if request.method == "POST":
+        if page["kind"] == "form":
+            message = f"{page['title']} submitted successfully."
+        elif page["kind"] == "course":
+            message = "Course selection saved successfully."
+        elif page["kind"] == "result":
+            message = "Reassessment request saved successfully."
+
+    subjects = get_seed_timetable_subjects() or ["PHP", "Python", "Java", "DBMS", "AI", "Math"]
+    exam_rows = [
+        {"date": "20-05-2026", "time": "10:00 AM to 12:00 PM", "subject": subjects[0] if len(subjects) > 0 else "Subject 1"},
+        {"date": "22-05-2026", "time": "10:00 AM to 12:00 PM", "subject": subjects[1] if len(subjects) > 1 else "Subject 2"},
+        {"date": "24-05-2026", "time": "10:00 AM to 12:00 PM", "subject": subjects[2] if len(subjects) > 2 else "Subject 3"},
+    ]
+    with db() as con:
+        marks_rows = get_cia_marks_rows(con, student_id=user["id"], exam_term="CIA")
+
+    if page_key == "result_reassessment":
+        return render_student_result_page(user, page)
+
+    return render_template(
+        "student/exam_page.html",
+        user=user,
+        page_key=page_key,
+        page=page,
+        subjects=subjects,
+        selected_subjects=selected_subjects,
+        exam_rows=exam_rows,
+        marks_rows=marks_rows,
+        result_data=result_data,
+        message=message,
+    )
+
+
+@app.route("/teacher_cia_marks", methods=["GET", "POST"])
+@app.route("/teacher_see_marks", methods=["GET", "POST"])
+def teacher_cia_marks():
+    if "user" not in session:
+        return redirect("/")
+    if session.get("role") != "teacher":
+        return redirect_for_role(session.get("role"))
+
+    selected_class = request.form.get("class_num") or request.args.get("class_num") or "1"
+    selected_subject = request.form.get("subject") or request.args.get("subject") or "PHP"
+    selected_mark_type = request.form.get("mark_type") or request.args.get("mark_type")
+    if not selected_mark_type:
+        selected_mark_type = "SEE" if request.path == "/teacher_see_marks" else "CIA"
+    selected_mark_type = "SEE" if selected_mark_type == "SEE" else "CIA"
+    total_marks = 50 if selected_mark_type == "SEE" else 25
+    message = ""
+
+    with db() as con:
+        if request.method == "POST":
+            student_ids = request.form.getlist("student_id")
+            for student_id in student_ids:
+                raw_marks = request.form.get(f"marks_{student_id}", "").strip()
+                remarks = request.form.get(f"remarks_{student_id}", "").strip()
+                if raw_marks == "":
+                    continue
+                try:
+                    marks = float(raw_marks)
+                except ValueError:
+                    continue
+                marks = max(0, min(marks, total_marks))
+                con.execute(
+                    """
+                    INSERT INTO exam_cia_marks(
+                        student_id, class_num, subject, marks, total_marks, exam_term, entered_by, remarks, updated_at
+                    )
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                    ON CONFLICT(student_id, subject, exam_term)
+                    DO UPDATE SET
+                        class_num=excluded.class_num,
+                        marks=excluded.marks,
+                        total_marks=excluded.total_marks,
+                        entered_by=excluded.entered_by,
+                        remarks=excluded.remarks,
+                        updated_at=CURRENT_TIMESTAMP
+                    """,
+                    (student_id, selected_class, selected_subject, marks, total_marks, selected_mark_type, session.get("user"), remarks)
+                )
+            message = f"{selected_mark_type} marks saved successfully."
+
+        students = con.execute(
+            """
+            SELECT users.*, exam_cia_marks.marks, exam_cia_marks.remarks
+            FROM users
+            LEFT JOIN exam_cia_marks
+              ON exam_cia_marks.student_id = users.id
+             AND exam_cia_marks.subject=?
+             AND exam_cia_marks.exam_term=?
+            WHERE users.role='student' AND users.class=?
+            ORDER BY users.rollno, users.username
+            """,
+            (selected_subject, selected_mark_type, str(selected_class))
+        ).fetchall()
+        classes = con.execute(
+            "SELECT DISTINCT class FROM users WHERE role='student' AND class IS NOT NULL AND class!='' ORDER BY CAST(class AS INTEGER), class"
+        ).fetchall()
+        all_marks = get_cia_marks_rows(con, exam_term=selected_mark_type)
+
+    return render_template(
+        "shared/cia_marks_manage.html",
+        role="teacher",
+        user=current_user(),
+        selected_class=selected_class,
+        selected_subject=selected_subject,
+        selected_mark_type=selected_mark_type,
+        total_marks=total_marks,
+        subjects=get_seed_timetable_subjects() or ["PHP", "Python", "Java", "DBMS", "AI", "Math"],
+        classes=[row["class"] for row in classes] or [str(i) for i in range(1, 13)],
+        students=students,
+        all_marks=all_marks,
+        message=message,
+    )
+
+
+@app.route("/admin_cia_marks", methods=["GET", "POST"])
+@app.route("/admin_see_marks", methods=["GET", "POST"])
+def admin_cia_marks():
+    if "user" not in session:
+        return redirect("/")
+    if session.get("role") != "admin":
+        return redirect_for_role(session.get("role"))
+
+    selected_class = request.form.get("class_num") or request.args.get("class_num") or "1"
+    selected_subject = request.form.get("subject") or request.args.get("subject") or "PHP"
+    selected_mark_type = request.form.get("mark_type") or request.args.get("mark_type")
+    if not selected_mark_type:
+        selected_mark_type = "SEE" if request.path == "/admin_see_marks" else "CIA"
+    selected_mark_type = "SEE" if selected_mark_type == "SEE" else "CIA"
+    total_marks = 50 if selected_mark_type == "SEE" else 25
+    message = ""
+
+    with db() as con:
+        if request.method == "POST":
+            student_ids = request.form.getlist("student_id")
+            for student_id in student_ids:
+                raw_marks = request.form.get(f"marks_{student_id}", "").strip()
+                remarks = request.form.get(f"remarks_{student_id}", "").strip()
+                if raw_marks == "":
+                    continue
+                try:
+                    marks = float(raw_marks)
+                except ValueError:
+                    continue
+                marks = max(0, min(marks, total_marks))
+                con.execute(
+                    """
+                    INSERT INTO exam_cia_marks(
+                        student_id, class_num, subject, marks, total_marks, exam_term, entered_by, remarks, updated_at
+                    )
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                    ON CONFLICT(student_id, subject, exam_term)
+                    DO UPDATE SET
+                        class_num=excluded.class_num,
+                        marks=excluded.marks,
+                        total_marks=excluded.total_marks,
+                        entered_by=excluded.entered_by,
+                        remarks=excluded.remarks,
+                        updated_at=CURRENT_TIMESTAMP
+                    """,
+                    (student_id, selected_class, selected_subject, marks, total_marks, selected_mark_type, session.get("user"), remarks)
+                )
+            message = f"{selected_mark_type} marks saved successfully."
+
+        students = con.execute(
+            """
+            SELECT users.*, exam_cia_marks.marks, exam_cia_marks.remarks
+            FROM users
+            LEFT JOIN exam_cia_marks
+              ON exam_cia_marks.student_id = users.id
+             AND exam_cia_marks.subject=?
+             AND exam_cia_marks.exam_term=?
+            WHERE users.role='student' AND users.class=?
+            ORDER BY users.rollno, users.username
+            """,
+            (selected_subject, selected_mark_type, str(selected_class))
+        ).fetchall()
+        classes = con.execute(
+            "SELECT DISTINCT class FROM users WHERE role='student' AND class IS NOT NULL AND class!='' ORDER BY CAST(class AS INTEGER), class"
+        ).fetchall()
+        all_marks = get_cia_marks_rows(con, exam_term=selected_mark_type)
+
+    return render_template(
+        "shared/cia_marks_manage.html",
+        role="admin",
+        user=current_user(),
+        selected_class=selected_class,
+        selected_subject=selected_subject,
+        selected_mark_type=selected_mark_type,
+        total_marks=total_marks,
+        subjects=get_seed_timetable_subjects() or ["PHP", "Python", "Java", "DBMS", "AI", "Math"],
+        classes=[row["class"] for row in classes] or [str(i) for i in range(1, 13)],
+        students=students,
+        all_marks=all_marks,
+        message=message,
+    )
+
+
+@app.route("/admin_results", methods=["GET", "POST"])
+def admin_results():
+    if "user" not in session:
+        return redirect("/")
+    if session.get("role") != "admin":
+        return redirect_for_role(session.get("role"))
+
+    selected_class = request.form.get("class_num") or request.args.get("class_num") or "1"
+    message = ""
+
+    with db() as con:
+        if request.method == "POST":
+            action = request.form.get("action", "")
+            is_declared = 1 if action == "declare" else 0
+            con.execute(
+                """
+                INSERT INTO exam_result_declarations(
+                    class_num, exam_term, is_declared, declared_by, declared_at
+                )
+                VALUES (?, 'Sem - III', ?, ?, CURRENT_TIMESTAMP)
+                ON CONFLICT(class_num, exam_term)
+                DO UPDATE SET
+                    is_declared=excluded.is_declared,
+                    declared_by=excluded.declared_by,
+                    declared_at=CASE WHEN excluded.is_declared=1 THEN CURRENT_TIMESTAMP ELSE NULL END
+                """,
+                (selected_class, is_declared, session.get("user"))
+            )
+            message = "Result declared successfully." if is_declared else "Result hidden from students."
+
+        classes = con.execute(
+            "SELECT DISTINCT class FROM users WHERE role='student' AND class IS NOT NULL AND class!='' ORDER BY CAST(class AS INTEGER), class"
+        ).fetchall()
+        students = con.execute(
+            """
+            SELECT *
+            FROM users
+            WHERE role='student' AND class=?
+            ORDER BY rollno, username
+            """,
+            (str(selected_class),)
+        ).fetchall()
+        declaration = get_result_declaration(con, selected_class)
+        summaries = []
+        for student in students:
+            result_data = build_student_result(con, student)
+            summaries.append({
+                "student": student,
+                "earned": result_data["earned"],
+                "maximum": result_data["maximum"],
+                "percentage": result_data["percentage"],
+                "sgpa": result_data["sgpa"],
+                "status": result_data["status"],
+            })
+
+    return render_template(
+        "admin/results.html",
+        selected_class=selected_class,
+        classes=[row["class"] for row in classes] or [str(i) for i in range(1, 13)],
+        declaration=declaration,
+        summaries=summaries,
+        message=message,
+    )
+
+
+@app.route("/admin_result/<int:student_id>")
+def admin_student_result(student_id):
+    if "user" not in session:
+        return redirect("/")
+    if session.get("role") != "admin":
+        return redirect_for_role(session.get("role"))
+
+    with db() as con:
+        student = con.execute(
+            "SELECT * FROM users WHERE id=? AND role='student'",
+            (student_id,)
+        ).fetchone()
+        if student is None:
+            return redirect("/admin_results")
+        result_data = build_student_result(con, student)
+
+    return render_template(
+        "shared/result_marksheet.html",
+        role="admin",
+        user=current_user(),
+        student=student,
+        result_data=result_data,
+        declaration=result_data["declaration"],
     )
 
 
@@ -2315,6 +3274,13 @@ def admin():
         pending_leave_count = con.execute(
             "SELECT COUNT(*) FROM student_leaves WHERE status='Pending'"
         ).fetchone()[0]
+        paid_fee_count = con.execute(
+            """
+            SELECT COUNT(DISTINCT student_id)
+            FROM fee_payments
+            WHERE fee_type='Academic Fee'
+            """
+        ).fetchone()[0]
         open_modules = course_count + subject_count + lecture_slot_count
         reports_ready = len(users) + len(teachers)
         attendance_trend = get_recent_attendance_chart(con, limit=5)
@@ -2345,6 +3311,7 @@ def admin():
         {"label": "Manage Timetable", "meta": "Build a new timetable", "url": "/manage_timetable"},
         {"label": "Weekly Report", "meta": "Open weekly attendance report", "url": "/weekly_attendance"},
         {"label": "Timetable", "meta": "Open lecture timetable", "url": "/timetable"},
+        {"label": "Fee Status", "meta": "See students who paid class fees", "url": "/fee_status"},
     ]
 
     for student in users[:50]:
@@ -2381,6 +3348,7 @@ def admin():
         festival_count=festival_count,
         next_festival=next_festival,
         pending_leave_count=pending_leave_count,
+        paid_fee_count=paid_fee_count,
         student_report_count=len(users),
         teacher_report_count=len(teachers),
         attendance_trend=attendance_trend,

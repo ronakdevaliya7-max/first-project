@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CIA Marks</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="app-layout">
+        {% if role == "admin" %}
+            {% include "admin/_sidebar.html" %}
+        {% else %}
+        <aside class="app-sidebar">
+            <div class="app-brand">
+                <div class="app-brand-badge">T</div>
+                <div>
+                    <h2>Teacher Desk</h2>
+                    <p class="sidebar-copy">Enter CIA marks and publish student result details.</p>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="/teacher" class="sidebar-link"><i class="fa-solid fa-chart-line"></i> Dashboard</a>
+                <a href="/teacher_cia_marks" class="sidebar-link is-active"><i class="fa-solid fa-clipboard-list"></i> CIA Marks</a>
+                <a href="/teacher_students" class="sidebar-link"><i class="fa-solid fa-users"></i> Students</a>
+                <a href="/logout" class="sidebar-link" onclick="return confirm('Are you sure you want to logout?')"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+            </nav>
+        </aside>
+        {% endif %}
+
+        <main class="app-main">
+            <div class="dashboard-topbar">
+                <div class="dashboard-search">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input id="cia-search" type="text" placeholder="Search student, class, subject" autocomplete="off">
+                </div>
+                <div class="topbar-actions">
+                    <a href="{{ '/admin' if role == 'admin' else '/teacher' }}" class="topbar-chip"><i class="fa-solid fa-house"></i> Dashboard</a>
+                </div>
+            </div>
+
+            <section class="dashboard-hero">
+                <div class="section-title" style="color:#fde68a;">Exam</div>
+                <h1 style="margin:0;">Exam Marks Entry</h1>
+                <p>{{ "Admin can review and update CIA and SEE results." if role == "admin" else "Teacher can enter CIA and SEE marks for students by class and subject." }}</p>
+            </section>
+
+            <section class="dashboard-mini-card" style="margin-top:20px;">
+                {% if message %}
+                <div class="form-feedback form-feedback--success">{{ message }}</div>
+                {% endif %}
+
+                <form method="get" class="toolbar-inline" style="padding:18px 22px 0;">
+                    <select name="class_num" class="mini-input">
+                        {% for class_num in classes %}
+                        <option value="{{ class_num }}" {% if class_num|string == selected_class|string %}selected{% endif %}>Class {{ class_num }}</option>
+                        {% endfor %}
+                    </select>
+                    <select name="subject" class="mini-input">
+                        {% for subject in subjects %}
+                        <option value="{{ subject }}" {% if subject == selected_subject %}selected{% endif %}>{{ subject }}</option>
+                        {% endfor %}
+                    </select>
+                    <select name="mark_type" class="mini-input">
+                        <option value="CIA" {% if selected_mark_type == "CIA" %}selected{% endif %}>CIA Marks</option>
+                        <option value="SEE" {% if selected_mark_type == "SEE" %}selected{% endif %}>SEE Marks</option>
+                    </select>
+                    <button type="submit" class="primary-link"><i class="fa-solid fa-filter"></i> Open</button>
+                </form>
+
+                <form method="post" class="fee-form" style="margin-top:18px;">
+                    <input type="hidden" name="class_num" value="{{ selected_class }}">
+                    <input type="hidden" name="subject" value="{{ selected_subject }}">
+                    <input type="hidden" name="mark_type" value="{{ selected_mark_type }}">
+                    <div class="table-toolbar">
+                        <div>
+                            <div class="label">Class {{ selected_class }} | {{ selected_subject }} | {{ selected_mark_type }}</div>
+                            <h3>Enter {{ selected_mark_type }} marks out of {{ total_marks }}</h3>
+                        </div>
+                        <button type="submit" class="primary-link"><i class="fa-solid fa-floppy-disk"></i> Save Marks</button>
+                    </div>
+                    <div class="table-shell table-shell--scroll" style="margin-top:18px;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Roll No</th>
+                                    <th>Name</th>
+                                    <th>Marks</th>
+                                    <th>Remarks</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in students %}
+                                <tr data-cia-row data-search-text="{{ ((student.rollno or '') ~ ' ' ~ (student.username or '') ~ ' ' ~ (student.class or '') ~ ' ' ~ selected_subject)|lower }}">
+                                    <td>{{ student.rollno or '-' }}</td>
+                                    <td>{{ student.username }}</td>
+                                    <td>
+                                        <input type="hidden" name="student_id" value="{{ student.id }}">
+                                        <input class="mini-input" type="number" name="marks_{{ student.id }}" min="0" max="{{ total_marks }}" step="0.5" value="{{ student.marks if student.marks is not none else '' }}" placeholder="0-{{ total_marks }}">
+                                    </td>
+                                    <td><input class="mini-input" type="text" name="remarks_{{ student.id }}" value="{{ student.remarks or '' }}" placeholder="Optional"></td>
+                                </tr>
+                                {% else %}
+                                <tr><td colspan="4" class="empty-copy">No students found for this class.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </form>
+            </section>
+
+            <section class="dashboard-mini-card" style="margin-top:20px;">
+                <div class="table-toolbar">
+                    <div>
+                        <div class="label">Result View</div>
+                        <h3>Published {{ selected_mark_type }} marks</h3>
+                    </div>
+                </div>
+                <div class="table-shell table-shell--scroll" style="margin-top:18px;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Class</th>
+                                <th>Roll No</th>
+                                <th>Name</th>
+                                <th>Subject</th>
+                                <th>Type</th>
+                                <th>Marks</th>
+                                <th>Entered By</th>
+                                <th>Updated</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in all_marks %}
+                            <tr data-cia-row data-search-text="{{ ((row.class or '') ~ ' ' ~ (row.rollno or '') ~ ' ' ~ (row.username or '') ~ ' ' ~ (row.subject or '') ~ ' ' ~ (row.entered_by or ''))|lower }}">
+                                <td>{{ row.class or '-' }}</td>
+                                <td>{{ row.rollno or '-' }}</td>
+                                <td>{{ row.username }}</td>
+                                <td>{{ row.subject }}</td>
+                                <td>{{ row.exam_term }}</td>
+                                <td>{{ row.marks }}/{{ row.total_marks }}</td>
+                                <td>{{ row.entered_by or '-' }}</td>
+                                <td>{{ row.updated_at or row.created_at }}</td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="8" class="empty-copy">No {{ selected_mark_type }} marks entered yet.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        const ciaSearch = document.getElementById("cia-search");
+        const ciaRows = Array.from(document.querySelectorAll("[data-cia-row]"));
+        if (ciaSearch) {
+            ciaSearch.addEventListener("input", function () {
+                const query = ciaSearch.value.trim().toLowerCase();
+                ciaRows.forEach(function (row) {
+                    row.hidden = Boolean(query) && !(row.dataset.searchText || "").includes(query);
+                });
+            });
+        }
+
+        function toggleAccordion(button) {
+            const content = button.nextElementSibling;
+            document.querySelectorAll('.accordion-content').forEach((panel) => {
+                if (panel !== content) {
+                    panel.classList.remove('active');
+                    panel.previousElementSibling.classList.remove('active');
+                }
+            });
+            content.classList.toggle('active');
+            button.classList.toggle('active');
+        }
+    </script>
+</body>
+</html>

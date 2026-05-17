@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fee Status</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="app-layout">
+        {% if role == "admin" %}
+            {% include "admin/_sidebar.html" %}
+        {% else %}
+        <aside class="app-sidebar">
+            <div class="app-brand">
+                <div class="app-brand-badge">T</div>
+                <div>
+                    <h2>Teacher Desk</h2>
+                    <p class="sidebar-copy">Review class-wise fee status and student payment records.</p>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="/teacher" class="sidebar-link"><i class="fa-solid fa-chart-line"></i> Dashboard</a>
+                <a href="/fee_status" class="sidebar-link is-active"><i class="fa-solid fa-receipt"></i> Fee Status</a>
+                <a href="/logout" class="sidebar-link" style="color:#ef4444;" onclick="return confirm('Are you sure you want to logout?')">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+                </a>
+            </nav>
+        </aside>
+        {% endif %}
+
+        <main class="app-main">
+            <div class="dashboard-topbar">
+                <div class="dashboard-search">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input id="fee-search" type="text" placeholder="Search name, roll no, class, receipt" autocomplete="off">
+                </div>
+                <div class="topbar-actions">
+                    <a href="{{ '/admin' if role == 'admin' else '/teacher' }}" class="topbar-chip"><i class="fa-solid fa-house"></i> Dashboard</a>
+                    <a href="/fee_status" class="topbar-chip"><i class="fa-solid fa-rotate-right"></i> All Classes</a>
+                </div>
+            </div>
+
+            <section class="dashboard-hero">
+                <div class="section-title" style="color:#fde68a;">Fee Desk</div>
+                <h1 style="margin:0;">Class-wise Paid Fee Students</h1>
+                <p>Open any class to see student names whose fee is paid. Use the fee type filter for academic fee, transport fee, or all submitted fee records.</p>
+                <div class="dashboard-chip-row">
+                    <span class="hero-chip"><i class="fa-solid fa-users"></i> {{ totals.students }} Students</span>
+                    <span class="hero-chip"><i class="fa-solid fa-circle-check"></i> {{ totals.paid }} Paid</span>
+                    <span class="hero-chip"><i class="fa-solid fa-clock"></i> {{ totals.pending }} Pending</span>
+                    <span class="hero-chip"><i class="fa-solid fa-indian-rupee-sign"></i> {{ "%.2f"|format(totals.amount) }}</span>
+                </div>
+            </section>
+
+            <section class="dashboard-mini-card" style="margin-top:20px;">
+                <div class="table-toolbar">
+                    <div>
+                        <div class="label">Filters</div>
+                        <h3>{{ "Class " ~ selected_class if selected_class else "All classes" }}</h3>
+                    </div>
+                    <form method="get" class="toolbar-inline">
+                        <select name="fee_type" class="mini-input" onchange="this.form.submit()">
+                            {% for option in fee_type_options %}
+                            <option value="{{ option }}" {% if option == fee_type %}selected{% endif %}>
+                                {{ "All Fees" if option == "all" else option }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </form>
+                </div>
+
+                <div class="dashboard-stat-grid" style="padding:18px 22px 0;">
+                    {% for item in summary_rows %}
+                    <a href="/fee_status/{{ item.class_num }}?fee_type={{ fee_type }}" class="dashboard-stat-card">
+                        <div class="label">Class {{ item.class_num }}</div>
+                        <div class="value">{{ item.paid }}/{{ item.students }}</div>
+                        <div class="meta">{{ item.pending }} pending | Rs. {{ "%.2f"|format(item.amount) }}</div>
+                    </a>
+                    {% else %}
+                    <div class="empty-copy">No student records found.</div>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <section class="dashboard-grid" style="margin-top:20px;">
+                <div class="dashboard-mini-card">
+                    <div class="table-toolbar">
+                        <div>
+                            <div class="label">Paid Students</div>
+                            <h3>Fee bharay gayi chhe</h3>
+                        </div>
+                    </div>
+                    <div class="table-shell table-shell--scroll" style="margin-top:18px;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Roll No</th>
+                                    <th>Name</th>
+                                    <th>Class</th>
+                                    <th>Amount</th>
+                                    <th>Receipt</th>
+                                    <th>Paid On</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% set paid_count = namespace(value=0) %}
+                                {% for student in student_rows %}
+                                    {% if student.is_paid %}
+                                    {% set paid_count.value = paid_count.value + 1 %}
+                                    <tr data-fee-row data-search-text="{{ (student.rollno ~ ' ' ~ student.username ~ ' ' ~ student.class ~ ' ' ~ student.latest_receipt)|lower }}">
+                                        <td>{{ student.rollno or '-' }}</td>
+                                        <td>{{ student.username }}</td>
+                                        <td>{{ student.class }}</td>
+                                        <td>Rs. {{ "%.2f"|format(student.paid_amount) }}</td>
+                                        <td>{{ student.latest_receipt }}</td>
+                                        <td>{{ student.latest_payment }}</td>
+                                    </tr>
+                                    {% endif %}
+                                {% endfor %}
+                                {% if paid_count.value == 0 %}
+                                <tr><td colspan="6" class="empty-copy">Aa class ma haju koi fee paid record nathi.</td></tr>
+                                {% endif %}
+                                <tr data-search-empty hidden><td colspan="6" class="empty-copy">No paid students match this search.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="dashboard-mini-card">
+                    <div class="table-toolbar">
+                        <div>
+                            <div class="label">Pending Students</div>
+                            <h3>Fee baki chhe</h3>
+                        </div>
+                    </div>
+                    <div class="table-shell table-shell--scroll" style="margin-top:18px;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Roll No</th>
+                                    <th>Name</th>
+                                    <th>Class</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% set pending_count = namespace(value=0) %}
+                                {% for student in student_rows %}
+                                    {% if not student.is_paid %}
+                                    {% set pending_count.value = pending_count.value + 1 %}
+                                    <tr data-fee-row data-search-text="{{ (student.rollno ~ ' ' ~ student.username ~ ' ' ~ student.class ~ ' pending')|lower }}">
+                                        <td>{{ student.rollno or '-' }}</td>
+                                        <td>{{ student.username }}</td>
+                                        <td>{{ student.class }}</td>
+                                        <td><span class="status-pill status-pill--pending">Pending</span></td>
+                                    </tr>
+                                    {% endif %}
+                                {% endfor %}
+                                {% if pending_count.value == 0 %}
+                                <tr><td colspan="4" class="empty-copy">Badha students ni fee paid dekhay chhe.</td></tr>
+                                {% endif %}
+                                <tr data-search-empty hidden><td colspan="4" class="empty-copy">No pending students match this search.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        const feeSearch = document.getElementById("fee-search");
+        const feeRows = Array.from(document.querySelectorAll("[data-fee-row]"));
+        const emptyRows = Array.from(document.querySelectorAll("[data-search-empty]"));
+
+        if (feeSearch) {
+            feeSearch.addEventListener("input", function () {
+                const query = feeSearch.value.trim().toLowerCase();
+                let visibleCount = 0;
+
+                feeRows.forEach(function (row) {
+                    const isVisible = !query || (row.dataset.searchText || "").includes(query);
+                    row.hidden = !isVisible;
+                    if (isVisible) {
+                        visibleCount += 1;
+                    }
+                });
+
+                emptyRows.forEach(function (row) {
+                    row.hidden = !query || visibleCount > 0;
+                });
+            });
+        }
+
+        function toggleAccordion(button) {
+            const content = button.nextElementSibling;
+            document.querySelectorAll('.accordion-content').forEach((panel) => {
+                if (panel !== content) {
+                    panel.classList.remove('active');
+                    panel.previousElementSibling.classList.remove('active');
+                }
+            });
+            content.classList.toggle('active');
+            button.classList.toggle('active');
+        }
+    </script>
+</body>
+</html>

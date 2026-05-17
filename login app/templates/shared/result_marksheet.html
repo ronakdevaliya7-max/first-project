@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Result</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        body{background:#f8fafc;color:#334155;font-family:Georgia, 'Times New Roman', serif;}
+        .result-wrap{max-width:1180px;margin:24px auto;padding:22px;border:1px solid #f97316;background:#fff;}
+        .result-head{display:grid;grid-template-columns:110px 1fr 130px;align-items:center;text-align:center;gap:16px;}
+        .result-logo{width:82px;height:82px;border-radius:50%;border:1px solid #cbd5e1;display:flex;align-items:center;justify-content:center;font-weight:800;color:#1e3a8a;}
+        .result-head h1{font-size:22px;margin:0;color:#475569;letter-spacing:.03em;}
+        .result-head p{margin:6px 0 0;font-weight:700;color:#475569;}
+        .result-photo{width:120px;height:120px;object-fit:cover;border:1px solid #94a3b8;}
+        .result-info,.result-table,.result-summary{width:100%;border-collapse:collapse;margin-top:24px;}
+        .result-info th,.result-info td,.result-table th,.result-table td,.result-summary th,.result-summary td{border:1px solid #94a3b8;padding:9px 10px;font-size:16px;}
+        .result-info th{text-align:left;width:30%;font-weight:800;color:#475569;}
+        .result-table th,.result-summary th{text-align:center;font-weight:800;color:#475569;}
+        .result-table td{text-align:center;}
+        .result-table td:nth-child(2){text-align:left;}
+        .result-note{margin-top:20px;line-height:1.7;font-size:15px;}
+        .result-actions{display:flex;gap:12px;justify-content:flex-end;margin:18px auto;max-width:1180px;}
+        .result-action-btn{display:inline-flex;align-items:center;justify-content:center;padding:11px 18px;border-radius:16px;border:1px solid #e2e8f0;background:#fff;color:#1e293b;font-weight:800;text-decoration:none;box-shadow:0 10px 24px rgba(15,23,42,.08);cursor:pointer;font-family:inherit;font-size:16px;}
+        @media print{.result-actions,.app-sidebar{display:none!important}.result-wrap{margin:0;border-color:#999;max-width:none}}
+    </style>
+</head>
+<body>
+    <div class="result-actions">
+        <a href="{{ '/admin_results' if role == 'admin' else '/home' }}" class="result-action-btn">Back</a>
+        <button onclick="window.print()" class="result-action-btn" type="button">Print Result</button>
+    </div>
+
+    <main class="result-wrap">
+        <header class="result-head">
+            <div class="result-logo">AU</div>
+            <div>
+                <h1>ATMIYA UNIVERSITY</h1>
+                <p>Yogidham Gurukul, Kalawad Road, Rajkot - 360005</p>
+            </div>
+            {% if student.photo %}
+            <img class="result-photo" src="{{ url_for('uploaded', filename=student.photo) }}" alt="Student photo">
+            {% else %}
+            <div class="result-photo" style="display:flex;align-items:center;justify-content:center;">Photo</div>
+            {% endif %}
+        </header>
+
+        <table class="result-info">
+            <tr><th>ENROLLMENT No.</th><td>{{ student.enroll or '-' }}</td></tr>
+            <tr><th>NAME OF THE CANDIDATE</th><td>{{ student.username }}</td></tr>
+            <tr><th>PROGRAMME</th><td>{{ declaration.programme if declaration else 'Bachelor of Computer Application' }}</td></tr>
+            <tr><th>EXAMINATION</th><td>{{ declaration.examination if declaration else 'November - 2025' }}</td></tr>
+        </table>
+
+        <table class="result-table">
+            <thead>
+                <tr>
+                    <th>COURSE CODE</th>
+                    <th>COURSE TITLE</th>
+                    <th>CIA MARKS</th>
+                    <th>SEE MARKS</th>
+                    <th>TOTAL MARKS</th>
+                    <th>RESULT</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in result_data.rows %}
+                <tr>
+                    <td>{{ row.course_code }}</td>
+                    <td>{{ row.subject }}</td>
+                    <td>{% if row.cia_marks == '-' %}-{% else %}{{ row.cia_marks|round(1) }} / {{ row.cia_total|round(0)|int }}{% endif %}</td>
+                    <td>{% if row.see_marks == '-' %}-{% else %}{{ row.see_marks|round(1) }} / {{ row.see_total|round(0)|int }}{% endif %}</td>
+                    <td>{{ row.total_marks|round(1) }} / {{ row.max_marks|round(0)|int }}</td>
+                    <td>{{ row.result }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <table class="result-summary">
+            <tr>
+                <th>Semester Grade Point Average (SGPA)</th>
+                <th>{{ declaration.exam_term if declaration else 'Sem - III' }}</th>
+                <th>Cumulative Grade Point Average (CGPA)</th>
+                <th>Cumulative</th>
+            </tr>
+            <tr>
+                <td>Total Marks<br><strong>{{ result_data.earned|round(1) }} / {{ result_data.maximum|round(0)|int }}</strong></td>
+                <td>Percentage<br><strong>{{ result_data.percentage }}%</strong></td>
+                <td>SGPA<br><strong>{{ result_data.sgpa }}</strong></td>
+                <td>Result<br><strong>{{ result_data.status }}</strong></td>
+            </tr>
+        </table>
+
+        <div class="result-note">
+            CIA - Continuous Internal Assessment, SEE - Semester End Examination, P - Pass, RA - Reappear<br>
+            Result declared at: {{ declaration.declared_at if declaration and declaration.declared_at else '-' }}
+        </div>
+    </main>
+</body>
+</html>

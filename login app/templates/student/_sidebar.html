@@ -1,0 +1,106 @@
+<aside class="app-sidebar">
+    <div class="app-brand">
+        <div class="app-brand-badge">AU</div>
+        <div>
+            <h2>Student Desk</h2>
+            <p class="sidebar-copy">Class {{ user.class or '-' }}</p>
+        </div>
+    </div>
+
+    {% set fee_paths = ['/pay_fee', '/fee_receipt', '/fee_circular', '/pay_transport_fee'] %}
+    {% set is_fee_open = request.path in fee_paths %}
+    {% set exam_paths = ['/exam/course_selection', '/exam/regular_form', '/exam/schedule_hall_ticket', '/exam/cia_marks', '/exam/repeater_form', '/exam/result_reassessment', '/exam/online_login', '/student_result'] %}
+    {% set is_exam_open = request.path in exam_paths %}
+
+    <nav class="sidebar-nav">
+        <a href="/home" class="sidebar-link {% if request.path == '/home' %}is-active{% endif %}">
+            <i class="fa-solid fa-house"></i> Home
+        </a>
+
+        <div class="sidebar-accordion">
+            <button type="button" class="accordion-btn {% if is_fee_open %}active{% endif %}" aria-expanded="{{ 'true' if is_fee_open else 'false' }}" data-accordion-button>
+                <span><i class="fa-solid fa-receipt"></i> Fees</span>
+                <i class="fa-solid fa-chevron-down accordion-arrow"></i>
+            </button>
+            <div class="accordion-content {% if is_fee_open %}active{% endif %}" data-accordion-content>
+                <a href="/pay_fee" class="accordion-item {% if request.path == '/pay_fee' %}is-active{% endif %}">
+                    <i class="fa-regular fa-circle-play"></i> Pay Fee
+                </a>
+                <a href="/fee_receipt" class="accordion-item {% if request.path == '/fee_receipt' %}is-active{% endif %}">
+                    <i class="fa-regular fa-circle-play"></i> Fee Receipt
+                </a>
+                <a href="/fee_circular" class="accordion-item {% if request.path == '/fee_circular' %}is-active{% endif %}">
+                    <i class="fa-regular fa-circle-play"></i> Fee Circular
+                </a>
+                <a href="/pay_transport_fee" class="accordion-item {% if request.path == '/pay_transport_fee' %}is-active{% endif %}">
+                    <i class="fa-regular fa-circle-play"></i> Pay Fees for Transport
+                </a>
+            </div>
+        </div>
+
+        <div class="sidebar-accordion">
+            <button type="button" class="accordion-btn {% if is_exam_open %}active{% endif %}" aria-expanded="{{ 'true' if is_exam_open else 'false' }}" data-accordion-button>
+                <span><i class="fa-regular fa-clipboard"></i> Exam</span>
+                <i class="fa-solid fa-chevron-down accordion-arrow"></i>
+            </button>
+            <div class="accordion-content {% if is_exam_open %}active{% endif %}" data-accordion-content>
+                <a href="/exam/course_selection" class="accordion-item {% if request.path == '/exam/course_selection' %}is-active{% endif %}">
+                    <i class="fa-regular fa-circle-play"></i> Course Selection
+                </a>
+                <a href="/exam/regular_form" class="accordion-item {% if request.path == '/exam/regular_form' %}is-active{% endif %}">
+                    <i class="fa-regular fa-circle-play"></i> Regular Exam Form
+                </a>
+                <a href="/exam/schedule_hall_ticket" class="accordion-item {% if request.path == '/exam/schedule_hall_ticket' %}is-active{% endif %}">
+                    <i class="fa-regular fa-circle-play"></i> Exam Schedule / Hall Ticket
+                </a>
+                <a href="/exam/cia_marks" class="accordion-item {% if request.path == '/exam/cia_marks' %}is-active{% endif %}">
+                    <i class="fa-regular fa-circle-play"></i> CIA Marks
+                </a>
+                <a href="/exam/repeater_form" class="accordion-item {% if request.path == '/exam/repeater_form' %}is-active{% endif %}">
+                    <i class="fa-regular fa-circle-play"></i> Repeater Exam Form
+                </a>
+                <a href="/exam/result_reassessment" class="accordion-item {% if request.path == '/exam/result_reassessment' %}is-active{% endif %}">
+                    <i class="fa-regular fa-circle-play"></i> Result and Reassessment
+                </a>
+                <a href="/exam/online_login" class="accordion-item {% if request.path == '/exam/online_login' %}is-active{% endif %}">
+                    <i class="fa-regular fa-circle-play"></i> Online Exam Login Detail
+                </a>
+            </div>
+        </div>
+
+        <a href="/my_attendance" class="sidebar-link {% if request.path == '/my_attendance' %}is-active{% endif %}">
+            <i class="fa-solid fa-chart-simple"></i> Academics
+        </a>
+        <a href="/student_result" class="sidebar-link {% if request.path == '/student_result' or request.path == '/exam/result_reassessment' %}is-active{% endif %}">
+            <i class="fa-solid fa-square-poll-vertical"></i> Result
+        </a>
+        <a href="/student_leave" class="sidebar-link {% if request.path == '/student_leave' %}is-active{% endif %}">
+            <i class="fa-solid fa-file-signature"></i> Leave Application
+        </a>
+        <a href="/timetable" class="sidebar-link {% if request.path == '/timetable' %}is-active{% endif %}">
+            <i class="fa-solid fa-calendar-days"></i> Timetable
+        </a>
+        <a href="/weekly_attendance" class="sidebar-link {% if request.path == '/weekly_attendance' %}is-active{% endif %}">
+            <i class="fa-solid fa-file-lines"></i> Weekly Report
+        </a>
+        <a href="/festivals" class="sidebar-link {% if request.path == '/festivals' %}is-active{% endif %}">
+            <i class="fa-solid fa-star"></i> Announcements
+        </a>
+        <a href="/logout" class="sidebar-link" onclick="return confirm('Are you sure you want to logout?')">
+            <i class="fa-solid fa-right-from-bracket"></i> Logout
+        </a>
+    </nav>
+</aside>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll("[data-accordion-button]").forEach(function (button) {
+            button.addEventListener("click", function () {
+                const content = button.parentElement.querySelector("[data-accordion-content]");
+                const isOpen = content.classList.toggle("active");
+                button.classList.toggle("active", isOpen);
+                button.setAttribute("aria-expanded", isOpen ? "true" : "false");
+            });
+        });
+    });
+</script>

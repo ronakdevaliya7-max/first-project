@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fee Circular</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="app-layout">
+        {% include "student/_sidebar.html" %}
+
+        <main class="app-main">
+            <section class="dashboard-hero">
+                <div class="section-title" style="color:#fde68a;">Fees</div>
+                <h1 style="margin:0;">Class {{ class_num or '-' }} Fee Circular</h1>
+                <p>Only circulars assigned to your class are shown here.</p>
+            </section>
+
+            <section class="dashboard-grid" style="margin-top:20px;">
+                {% for item in fee_messages %}
+                <article class="dashboard-mini-card">
+                    <div class="label">{{ item.created_at }}</div>
+                    <h3>{{ item.subject }}</h3>
+                    <p>{{ item.message }}</p>
+                    <div class="action-row">
+                        <a href="/pay_fee" class="primary-link">Pay Academic Fee</a>
+                        <a href="/fee_receipt" class="secondary-link">View Receipt</a>
+                    </div>
+                </article>
+                {% endfor %}
+
+                {% for circular in circulars %}
+                <article class="dashboard-mini-card">
+                    <div class="label">{{ circular.created_at }}</div>
+                    <h3>{{ circular.subject }}</h3>
+                    <p>{{ circular.message }}</p>
+                    <div class="empty-copy" style="text-align:left;">By {{ circular.created_by or 'Admin' }}</div>
+                </article>
+                {% else %}
+                {% if not fee_messages %}
+                <div class="dashboard-mini-card">
+                    <div class="empty-copy">No fee circular is available for Class {{ class_num or '-' }} right now.</div>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </section>
+        </main>
+    </div>
+</body>
+</html>
