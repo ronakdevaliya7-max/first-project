@@ -2737,7 +2737,6 @@ def student_exam_page(page_key):
         selected_subjects=selected_subjects,
         exam_rows=exam_rows,
         marks_rows=marks_rows,
-        result_data=result_data,
         message=message,
     )
 
