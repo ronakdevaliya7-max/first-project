@@ -164,6 +164,11 @@ def redirect_for_role(role):
     return redirect("/home")
 
 
+def normalize_login_role(role):
+    role = (role or "").strip().lower()
+    return role if role in {"admin", "teacher", "student"} else ""
+
+
 def authenticate_user(username, password):
     with db() as con:
         user = con.execute(
@@ -1020,6 +1025,27 @@ def initialize_database():
                 "teacher"
             ))
 
+        demo_student = con.execute("SELECT * FROM users WHERE username=?", ("student",)).fetchone()
+        if not demo_student:
+            con.execute("""
+            INSERT INTO users(rollno,username,password,gender,mobile,address,photo,enroll,blood,school,birthdate,class,role)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
+            """, (
+                1,
+                "student",
+                generate_password_hash("student123"),
+                "",
+                "",
+                "",
+                "",
+                "ENR-DEMO-001",
+                "",
+                "Demo School",
+                "",
+                "10",
+                "student"
+            ))
+
         default_course = "BCA"
         seed_timetable_schedule(con)
 
@@ -1534,149 +1560,57 @@ def ensure_festival_calendar(con, reset=False):
 
 
 # LANDING PAGE
-@app.route("/")
+@app.route("/", methods=["GET", "POST"])
 def index():
     if "user" in session:
         return redirect_for_role(session.get("role"))
-    with db() as con:
-        ensure_six_month_timetable(con)
-        student_count = con.execute(
-            "SELECT COUNT(*) FROM users WHERE role='student'"
-        ).fetchone()[0]
-        teacher_count = con.execute(
-            "SELECT COUNT(*) FROM teachers"
-        ).fetchone()[0]
-        course_count = con.execute(
-            "SELECT COUNT(*) FROM courses"
-        ).fetchone()[0]
-        subject_count = con.execute(
-            "SELECT COUNT(*) FROM subjects"
-        ).fetchone()[0]
-        lecture_count = con.execute(
-            "SELECT COUNT(*) FROM lectures"
-        ).fetchone()[0]
-        today_text = date.today().isoformat()
-        today_classes = con.execute(
-            "SELECT COUNT(*) FROM lectures WHERE lecture_date=?",
-            (today_text,)
-        ).fetchone()[0]
-        weekly_entries = con.execute(
-            """
-            SELECT COUNT(*)
-            FROM lecture_attendance
-            WHERE date >= ? AND date <= ?
-            """,
-            ((date.today() - timedelta(days=6)).isoformat(), today_text)
-        ).fetchone()[0]
-        pending_leave_count = con.execute(
-            "SELECT COUNT(*) FROM student_leaves WHERE status='Pending'"
-        ).fetchone()[0]
-        latest_lecture = con.execute(
-            """
-            SELECT lecture_date, day, lecture_name, time
-            FROM lectures
-            ORDER BY lecture_date DESC, id DESC
-            LIMIT 1
-            """
-        ).fetchone()
-
-    reports_ready = student_count + teacher_count
-    open_modules = course_count + subject_count
-    latest_lecture_name = latest_lecture["lecture_name"] if latest_lecture and latest_lecture["lecture_name"] else "Lecture Track"
-    latest_lecture_time = latest_lecture["time"] if latest_lecture and latest_lecture["time"] else "Time pending"
-
-    return render_template(
-        "shared/index.html",
-        student_count=student_count,
-        teacher_count=teacher_count,
-        course_count=course_count,
-        subject_count=subject_count,
-        lecture_count=lecture_count,
-        today_classes=today_classes,
-        weekly_entries=weekly_entries,
-        pending_leave_count=pending_leave_count,
-        reports_ready=reports_ready,
-        open_modules=open_modules,
-        latest_lecture_name=latest_lecture_name,
-        latest_lecture_time=latest_lecture_time,
-        timetable_day_count=len(TIMETABLE_DAYS),
-    )
+    return handle_login("admin")
 
 
-# STUDENT LOGIN
-@app.route("/student_login", methods=["GET","POST"])
-def student_login():
-    msg=""
+# LOGIN
+def handle_login(expected_role=""):
+    expected_role = normalize_login_role(expected_role)
+    selected_role = normalize_login_role(request.values.get("role")) or expected_role
+    msg = ""
 
-    if request.method=="POST":
+    if request.method == "POST":
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "")
 
-        username=request.form["username"]
-        password=request.form["password"]
-
-        user = authenticate_user(username, password)
-
-        if user and user["role"] == "student":
-            session["user"]=username
-            session["role"]= user["role"] if user["role"] else "student"
-            return redirect_for_role(session["role"])
-
+        if not selected_role:
+            msg = "Please select admin, teacher, or student"
         else:
-            msg="Invalid student login"
+            user = authenticate_user(username, password)
+            user_role = normalize_login_role(user["role"] if user else "")
 
-    return render_template("shared/login.html",msg=msg, role="student")
+            if user and user_role == selected_role:
+                session["user"] = user["username"]
+                session["role"] = user_role or "student"
+                return redirect_for_role(session["role"])
+
+            msg = f"Invalid {selected_role} login"
+
+    return render_template("shared/login.html", msg=msg, role=selected_role)
 
 
-# LOGIN (kept for backward compatibility)
-@app.route("/login", methods=["GET","POST"])
+@app.route("/login", methods=["GET", "POST"])
 def login():
-    msg=""
-
-    if request.method=="POST":
-
-        username=request.form["username"]
-        password=request.form["password"]
-
-        user = authenticate_user(username, password)
-
-        if user:
-            session["user"]=username
-            session["role"]= user["role"] if user["role"] else "student"
-            return redirect_for_role(session["role"])
-
-        else:
-            msg="Invalid Login"
-
-    return render_template("shared/login.html",msg=msg)
+    return handle_login()
 
 
-@app.route("/admin_login", methods=["GET","POST"])
+@app.route("/student_login", methods=["GET", "POST"])
+def student_login():
+    return handle_login("student")
+
+
+@app.route("/admin_login", methods=["GET", "POST"])
 def admin_login():
-    msg=""
-    if request.method=="POST":
-        username=request.form["username"]
-        password=request.form["password"]
-        user = authenticate_user(username, password)
-        if user and user["role"] == "admin":
-            session["user"]=username
-            session["role"]= user["role"] if user["role"] else "student"
-            return redirect_for_role(session["role"])
-        msg="Invalid admin login"
-    return render_template("shared/login.html", msg=msg, role="admin")
+    return handle_login("admin")
 
 
-@app.route("/teacher_login", methods=["GET","POST"])
+@app.route("/teacher_login", methods=["GET", "POST"])
 def teacher_login():
-    msg=""
-    if request.method=="POST":
-        username=request.form["username"]
-        password=request.form["password"]
-        user = authenticate_user(username, password)
-        if user and user["role"] == "teacher":
-            session["user"]=username
-            session["role"]= user["role"] if user["role"] else "student"
-            return redirect_for_role(session["role"])
-        msg="Invalid teacher login"
-    return render_template("shared/login.html", msg=msg, role="teacher")
+    return handle_login("teacher")
 
 
 @app.route("/teacher")

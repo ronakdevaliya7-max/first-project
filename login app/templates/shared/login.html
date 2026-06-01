@@ -12,69 +12,95 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-<body>
-    <div class="login-shell">
-        <div class="login-layout">
-            <section class="login-panel">
-                <div class="eyebrow"><i class="fa-solid fa-shield-halved"></i> Secure Access</div>
-                <h1 style="font-size:clamp(2.4rem, 4vw, 4rem); margin:18px 0 14px;">
-                    {% if role == 'admin' %}Admin{% elif role == 'teacher' %}Teacher{% elif role == 'student' %}Student{% else %}Portal{% endif %}
-                    login with a cleaner premium flow.
-                </h1>
-                <p>Sign in to continue to attendance operations, reporting, timetable planning, and role-based dashboards built around your existing Flask project.</p>
+<body class="portal-access-page">
+    <main class="portal-access-shell">
+        <section class="portal-access-hero">
+            <div class="portal-logo-mark">AU</div>
+            <div class="eyebrow portal-access-eyebrow">
+                <i class="fa-solid fa-shield-halved"></i> Secure Attendance Portal
+            </div>
+            <h1>
+                {% if role == 'admin' %}Admin{% elif role == 'teacher' %}Teacher{% elif role == 'student' %}Student{% else %}Role based{% endif %}
+                login for a focused workspace.
+            </h1>
+            <p>Use one polished login screen for admin control, teacher attendance, and student reports. Pick a desk, sign in, and continue directly into the right dashboard.</p>
 
-                <div class="hero-chip-row">
-                    <span class="hero-chip">Role Based Access</span>
-                    <span class="hero-chip">Attendance Ready</span>
-                    <span class="hero-chip">Premium Dashboard UI</span>
+            <div class="portal-access-chip-row">
+                <span>Admin Desk</span>
+                <span>Teacher Desk</span>
+                <span>Student Desk</span>
+                <span>Reports Ready</span>
+            </div>
+
+            <div class="portal-access-stats">
+                <div>
+                    <strong>3</strong>
+                    <span>login roles</span>
                 </div>
-
-                <div class="login-points">
-                    <div class="login-point">
-                        <i class="fa-solid fa-bolt"></i>
-                        <div>
-                            <strong>Fast sign-in experience</strong>
-                            <div>Focused form layout with cleaner spacing, quick recognition, and less friction.</div>
-                        </div>
-                    </div>
-                    <div class="login-point">
-                        <i class="fa-solid fa-chart-column"></i>
-                        <div>
-                            <strong>Reports and dashboards</strong>
-                            <div>Access role-specific pages for admin control, teacher actions, and student tracking.</div>
-                        </div>
-                    </div>
-                    <div class="login-point">
-                        <i class="fa-solid fa-user-lock"></i>
-                        <div>
-                            <strong>Protected access</strong>
-                            <div>Password hashing and role validation stay in your Flask backend exactly as required.</div>
-                        </div>
-                    </div>
+                <div>
+                    <strong>1</strong>
+                    <span>single app</span>
                 </div>
-            </section>
-
-            <section class="card login-card">
-                <div class="brand-badge" style="background:var(--gradient-soft); color:var(--primary-deep);">
-                    {% if role == 'admin' %}Admin Login{% elif role == 'teacher' %}Teacher Login{% elif role == 'student' %}Student Login{% else %}Portal Login{% endif %}
+                <div>
+                    <strong>24/7</strong>
+                    <span>portal access</span>
                 </div>
-                <h2 style="margin:18px 0 8px;">Welcome back</h2>
-                <p style="color:var(--muted); margin-top:0;">Enter your credentials to continue into the cleaner premium flow.</p>
+            </div>
+        </section>
 
-                <form method="post" autocomplete="off">
-                    <label>Username</label>
-                    <div class="input-icon-group">
+        <section class="portal-login-panel" aria-label="Portal login">
+            <div class="portal-login-head">
+                <div>
+                    <span class="portal-login-kicker">Welcome back</span>
+                    <h2>
+                        {% if role == 'admin' %}Admin Login{% elif role == 'teacher' %}Teacher Login{% elif role == 'student' %}Student Login{% else %}Portal Login{% endif %}
+                    </h2>
+                </div>
+                <div class="portal-login-icon">
+                    <i class="fa-solid {% if role == 'admin' %}fa-user-shield{% elif role == 'teacher' %}fa-chalkboard-user{% elif role == 'student' %}fa-user-graduate{% else %}fa-users-gear{% endif %}"></i>
+                </div>
+            </div>
+
+            <div class="portal-role-tabs">
+                <a href="/login?role=admin" class="{% if role == 'admin' %}is-active{% endif %}">Admin</a>
+                <a href="/login?role=teacher" class="{% if role == 'teacher' %}is-active{% endif %}">Teacher</a>
+                <a href="/login?role=student" class="{% if role == 'student' %}is-active{% endif %}">Student</a>
+            </div>
+
+            <form method="post" autocomplete="off" class="portal-login-form">
+                {% if role %}
+                <input type="hidden" name="role" value="{{ role }}">
+                {% else %}
+                <label>
+                    <span>Login Role</span>
+                    <div class="portal-field">
+                        <i class="fa-solid fa-users-gear"></i>
+                        <select name="role" required aria-label="Select login role">
+                            <option value="">Select desk</option>
+                            <option value="admin">Admin Desk</option>
+                            <option value="teacher">Teacher Desk</option>
+                            <option value="student">Student Desk</option>
+                        </select>
+                    </div>
+                </label>
+                {% endif %}
+
+                <label>
+                    <span>Username</span>
+                    <div class="portal-field">
                         <i class="fa-regular fa-user"></i>
                         <input type="text" name="username" placeholder="Enter username" required>
                     </div>
+                </label>
 
-                    <label>Password</label>
-                    <div class="input-icon-group">
+                <label>
+                    <span>Password</span>
+                    <div class="portal-field">
                         <i class="fa-solid fa-lock"></i>
                         <input type="password" id="passwordField" name="password" placeholder="Enter password" required>
                         <button
                             type="button"
-                            class="password-toggle"
+                            class="portal-password-toggle"
                             id="passwordToggle"
                             aria-label="Show password"
                             aria-pressed="false"
@@ -82,36 +108,33 @@
                             <i id="passwordIcon" class="fa-regular fa-eye"></i>
                         </button>
                     </div>
+                </label>
 
-                    <button type="submit" style="width:100%; margin-top:24px;">Continue</button>
-                </form>
+                <button type="submit" class="portal-submit-button">
+                    <i class="fa-solid fa-arrow-right-to-bracket"></i> Login
+                </button>
+            </form>
 
-                {% if msg %}
-                <div style="margin-top:16px; padding:14px; border-radius:14px; background:#fee2e2; color:#991b1b; font-weight:700;">
-                    {{ msg }}
-                </div>
+            {% if msg %}
+            <div class="portal-login-alert">{{ msg }}</div>
+            {% endif %}
+
+            <div class="portal-login-actions">
+                {% if role == 'admin' %}
+                <a href="/forgot_password?role=admin">Forgot Password?</a>
+                <a href="/signup?role=admin">Create Account</a>
+                {% elif role == 'teacher' %}
+                <a href="/forgot_password?role=teacher">Forgot Password?</a>
+                <a href="/signup?role=teacher">Create Account</a>
+                {% elif role == 'student' %}
+                <a href="/forgot_password?role=student">Forgot Password?</a>
+                {% else %}
+                <a href="/forgot_password">Forgot Password?</a>
+                <a href="/login">All Login</a>
                 {% endif %}
-
-                <div class="action-row" style="justify-content:center; margin-top:18px;">
-                    <a href="/" class="secondary-link">Back to Home</a>
-                    {% if role == 'admin' %}
-                    <a href="/signup?role=admin" class="secondary-link">Create Account</a>
-                    {% elif role == 'teacher' %}
-                    <a href="/signup?role=teacher" class="secondary-link">Create Account</a>
-                    {% endif %}
-                    {% if role == 'admin' %}
-                    <a href="/forgot_password?role=admin" class="secondary-link">Forgot Password</a>
-                    {% elif role == 'teacher' %}
-                    <a href="/forgot_password?role=teacher" class="secondary-link">Forgot Password</a>
-                    {% elif role == 'student' %}
-                    <a href="/forgot_password?role=student" class="secondary-link">Forgot Password</a>
-                    {% else %}
-                    <a href="/forgot_password" class="secondary-link">Forgot Password</a>
-                    {% endif %}
-                </div>
-            </section>
-        </div>
-    </div>
+            </div>
+        </section>
+    </main>
 
     <script>
     (function () {

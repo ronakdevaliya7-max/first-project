@@ -102,7 +102,7 @@ class AttendanceAppTests(unittest.TestCase):
             ).fetchone()["id"]
 
     def test_public_pages_load(self):
-        for path in ["/", "/signup?role=admin", "/signup?role=teacher", "/student_login", "/admin_login", "/teacher_login", "/forgot_password", "/forgot_password?role=admin", "/forgot_password?role=teacher", "/forgot_password?role=student"]:
+        for path in ["/", "/login", "/login?role=admin", "/login?role=teacher", "/login?role=student", "/signup?role=admin", "/signup?role=teacher", "/student_login", "/admin_login", "/teacher_login", "/forgot_password", "/forgot_password?role=admin", "/forgot_password?role=teacher", "/forgot_password?role=student"]:
             response = self.client.get(path)
             self.assertEqual(response.status_code, 200, path)
 
@@ -217,6 +217,45 @@ class AttendanceAppTests(unittest.TestCase):
         response = self.login_admin()
         self.assertEqual(response.status_code, 302)
         self.assertIn("/admin", response.headers["Location"])
+
+    def test_single_login_opens_selected_role_desk(self):
+        self.insert_student(username="singleloginstudent", rollno=14)
+
+        response = self.client.post(
+            "/login",
+            data={"role": "admin", "username": "admin", "password": "admin123"},
+            follow_redirects=False,
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("/admin", response.headers["Location"])
+
+        self.client.get("/logout", follow_redirects=False)
+        response = self.client.post(
+            "/login",
+            data={"role": "teacher", "username": "atmiya", "password": "atmiya123"},
+            follow_redirects=False,
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("/teacher", response.headers["Location"])
+
+        self.client.get("/logout", follow_redirects=False)
+        response = self.client.post(
+            "/login",
+            data={"role": "student", "username": "singleloginstudent", "password": "pass1234"},
+            follow_redirects=False,
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("/home", response.headers["Location"])
+
+    def test_single_login_rejects_wrong_selected_role(self):
+        response = self.client.post(
+            "/login",
+            data={"role": "teacher", "username": "admin", "password": "admin123"},
+            follow_redirects=False,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Invalid teacher login", response.data)
 
     def test_student_login_does_not_show_signup_link(self):
         response = self.client.get("/student_login")

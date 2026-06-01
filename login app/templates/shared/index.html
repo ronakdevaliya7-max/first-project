@@ -67,9 +67,9 @@
                         <span class="hero-chip">Timetable Ready</span>
                     </div>
                     <div class="action-row landing-action-row">
-                        <a href="/admin_login" class="primary-link"><i class="fa-solid fa-user-shield"></i> Open Admin Panel</a>
-                        <a href="/teacher_login" class="secondary-link"><i class="fa-solid fa-chalkboard-user"></i> Enter Teacher Panel</a>
-                        <a href="/student_login" class="secondary-link"><i class="fa-solid fa-user-graduate"></i> Enter Student Panel</a>
+                        <a href="/login?role=admin" class="primary-link"><i class="fa-solid fa-user-shield"></i> Open Admin Desk</a>
+                        <a href="/login?role=teacher" class="secondary-link"><i class="fa-solid fa-chalkboard-user"></i> Enter Teacher Desk</a>
+                        <a href="/login?role=student" class="secondary-link"><i class="fa-solid fa-user-graduate"></i> Enter Student Desk</a>
                     </div>
                     <div class="hero-stat-grid landing-stat-grid">
                         <div class="hero-stat">
@@ -96,7 +96,7 @@
                         <div class="feature-card portal-card portal-card--admin">
                             <div class="portal-card-head">
                                 <strong><i class="fa-solid fa-user-shield"></i> Admin</strong>
-                                <a href="/admin_login" class="portal-accent-chip">{{ reports_ready }} Records</a>
+                                <a href="/login?role=admin" class="portal-accent-chip">{{ reports_ready }} Records</a>
                             </div>
                             <p>Create subjects, courses, teachers, and students with direct control over records and reports.</p>
                             <div class="portal-badge-row">
@@ -105,14 +105,14 @@
                                 <a href="/weekly_attendance" class="portal-badge">Reports {{ reports_ready }}</a>
                             </div>
                             <div class="action-row">
-                                <a href="/admin_login" class="primary-link">Admin Login</a>
+                                <a href="/login?role=admin" class="primary-link">Admin Login</a>
                                 <a href="/signup?role=admin" class="secondary-link">Admin Signup</a>
                             </div>
                         </div>
                         <div class="feature-card portal-card portal-card--teacher">
                             <div class="portal-card-head">
                                 <strong><i class="fa-solid fa-chalkboard-user"></i> Teacher</strong>
-                                <a href="/teacher_login" class="portal-accent-chip">{{ lecture_count }} Lectures</a>
+                                <a href="/login?role=teacher" class="portal-accent-chip">{{ lecture_count }} Lectures</a>
                             </div>
                             <p>Track lectures, mark attendance, and review weekly activity from one focused workspace.</p>
                             <div class="portal-badge-row">
@@ -121,23 +121,23 @@
                                 <a href="/weekly_attendance" class="portal-badge">Weekly {{ weekly_entries }}</a>
                             </div>
                             <div class="action-row">
-                                <a href="/teacher_login" class="primary-link">Teacher Login</a>
+                                <a href="/login?role=teacher" class="primary-link">Teacher Login</a>
                                 <a href="/signup?role=teacher" class="secondary-link">Teacher Signup</a>
                             </div>
                         </div>
                         <div class="feature-card portal-card portal-card--student">
                             <div class="portal-card-head">
                                 <strong><i class="fa-solid fa-user-graduate"></i> Student</strong>
-                                <a href="/student_login" class="portal-accent-chip">{{ student_count }} Students</a>
+                                <a href="/login?role=student" class="portal-accent-chip">{{ student_count }} Students</a>
                             </div>
                             <p>View attendance, reports, and academic schedule in a cleaner premium experience.</p>
                             <div class="portal-badge-row">
-                                <a href="/student_login" class="portal-badge">Attendance {{ student_count }}</a>
+                                <a href="/login?role=student" class="portal-badge">Attendance {{ student_count }}</a>
                                 <a href="/student_leave" class="portal-badge">Leave {{ pending_leave_count }}</a>
                                 <a href="/timetable" class="portal-badge">Timetable {{ timetable_day_count }}D</a>
                             </div>
                             <div class="action-row">
-                                <a href="/student_login" class="primary-link">Student Login</a>
+                                <a href="/login?role=student" class="primary-link">Student Login</a>
                                 <a href="/signup?role=student" class="secondary-link">Student Signup</a>
                             </div>
                         </div>

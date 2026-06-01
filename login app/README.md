@@ -29,14 +29,25 @@ python app.py
 http://127.0.0.1:5000/
 ```
 
-## Default Login
+## Login
 
-- Admin:
+Use the single login screen:
+
+```text
+http://127.0.0.1:5000/login
+```
+
+Choose Admin Desk, Teacher Desk, or Student Desk. The app redirects each successful login to its own dashboard.
+
+- Admin Desk:
   - Username: `admin`
   - Password: `admin123`
-- Teacher:
+- Teacher Desk:
   - Username: `atmiya`
   - Password: `atmiya123`
+- Student Desk:
+  - Username: `student`
+  - Password: `student123`
 
 ## Test
 
