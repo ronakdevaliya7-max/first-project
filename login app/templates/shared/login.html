@@ -12,7 +12,27 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-<body class="portal-access-page">
+<body class="portal-access-page portal-access-page--animated">
+    <div class="portal-opening" aria-hidden="true">
+        <div class="portal-opening-panel">
+            <div class="portal-opening-mark">AU</div>
+            <div class="portal-opening-copy">
+                <span>Attendance Portal</span>
+                <strong>Welcome to Student Protocol</strong>
+            </div>
+            <div class="portal-opening-track">
+                <span></span>
+            </div>
+            <div class="portal-opening-grid">
+                <i></i>
+                <i></i>
+                <i></i>
+                <i></i>
+                <i></i>
+                <i></i>
+            </div>
+        </div>
+    </div>
     <main class="portal-access-shell">
         <section class="portal-access-hero">
             <div class="portal-logo-mark">AU</div>

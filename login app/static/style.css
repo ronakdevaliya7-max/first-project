@@ -61,6 +61,211 @@ body{
     transition:background .3s ease,color .3s ease;
 }
 
+.portal-opening{
+    position:fixed;
+    inset:0;
+    z-index:9999;
+    display:grid;
+    place-items:center;
+    padding:24px;
+    background:linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(15, 118, 110, 0.96));
+    animation:portalOpeningExit 0.7s ease forwards;
+    animation-delay:2.45s;
+    pointer-events:none;
+}
+
+.portal-opening-panel{
+    width:min(520px, 100%);
+    border:1px solid rgba(255, 255, 255, 0.22);
+    border-radius:28px;
+    padding:34px;
+    color:#fff;
+    background:rgba(255, 255, 255, 0.08);
+    box-shadow:0 30px 90px rgba(0, 0, 0, 0.32);
+    overflow:hidden;
+    position:relative;
+    opacity:0;
+    transform:translateY(16px) scale(0.96);
+    animation:portalPanelIn 0.75s cubic-bezier(.2, .8, .2, 1) forwards;
+}
+
+.portal-opening-panel::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.26), transparent);
+    transform:translateX(-120%);
+    animation:portalScan 1.2s ease 0.45s forwards;
+}
+
+.portal-opening-mark{
+    width:76px;
+    height:76px;
+    border-radius:22px;
+    display:grid;
+    place-items:center;
+    font-size:30px;
+    font-weight:800;
+    color:#0f172a;
+    background:#fde68a;
+    box-shadow:0 18px 45px rgba(253, 230, 138, 0.28);
+}
+
+.portal-opening-copy{
+    margin-top:22px;
+    display:grid;
+    gap:6px;
+}
+
+.portal-opening-copy span{
+    color:rgba(255, 255, 255, 0.72);
+    font-size:14px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:0;
+}
+
+.portal-opening-copy strong{
+    font-size:clamp(30px, 6vw, 48px);
+    line-height:1.05;
+    letter-spacing:0;
+}
+
+.portal-opening-track{
+    height:10px;
+    border-radius:999px;
+    margin-top:26px;
+    overflow:hidden;
+    background:rgba(255, 255, 255, 0.18);
+}
+
+.portal-opening-track span{
+    display:block;
+    height:100%;
+    width:100%;
+    border-radius:inherit;
+    background:#22c55e;
+    transform-origin:left;
+    transform:scaleX(0);
+    animation:portalLoad 1.45s ease 0.3s forwards;
+}
+
+.portal-opening-grid{
+    display:grid;
+    grid-template-columns:repeat(6, 1fr);
+    gap:10px;
+    margin-top:24px;
+}
+
+.portal-opening-grid i{
+    height:44px;
+    border-radius:12px;
+    background:rgba(255, 255, 255, 0.14);
+    border:1px solid rgba(255, 255, 255, 0.16);
+    transform:translateY(18px);
+    opacity:0;
+    animation:portalTileIn 0.45s ease forwards;
+}
+
+.portal-opening-grid i:nth-child(1){ animation-delay:0.52s; }
+.portal-opening-grid i:nth-child(2){ animation-delay:0.62s; }
+.portal-opening-grid i:nth-child(3){ animation-delay:0.72s; }
+.portal-opening-grid i:nth-child(4){ animation-delay:0.82s; }
+.portal-opening-grid i:nth-child(5){ animation-delay:0.92s; }
+.portal-opening-grid i:nth-child(6){ animation-delay:1.02s; }
+
+.landing-shell{
+    animation:pageLiftIn 0.85s ease both;
+    animation-delay:0.2s;
+}
+
+.landing-main,
+.landing-side{
+    animation:sectionRiseIn 0.85s ease both;
+}
+
+.landing-side{
+    animation-delay:0.16s;
+}
+
+.portal-access-page--animated .portal-access-hero,
+.portal-access-page--animated .portal-login-panel{
+    animation:sectionRiseIn 0.72s ease both;
+}
+
+.portal-access-page--animated .portal-login-panel{
+    animation-delay:0.12s;
+}
+
+@keyframes portalPanelIn{
+    to{
+        opacity:1;
+        transform:translateY(0) scale(1);
+    }
+}
+
+@keyframes portalOpeningExit{
+    to{
+        opacity:0;
+        visibility:hidden;
+    }
+}
+
+@keyframes portalScan{
+    to{
+        transform:translateX(120%);
+    }
+}
+
+@keyframes portalLoad{
+    to{
+        transform:scaleX(1);
+    }
+}
+
+@keyframes portalTileIn{
+    to{
+        opacity:1;
+        transform:translateY(0);
+    }
+}
+
+@keyframes pageLiftIn{
+    from{
+        opacity:0;
+        transform:translateY(14px);
+    }
+    to{
+        opacity:1;
+        transform:translateY(0);
+    }
+}
+
+@keyframes sectionRiseIn{
+    from{
+        opacity:0;
+        transform:translateY(22px);
+    }
+    to{
+        opacity:1;
+        transform:translateY(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce){
+    .portal-opening{
+        display:none;
+    }
+
+    .landing-shell,
+    .landing-main,
+    .landing-side,
+    .portal-access-page--animated .portal-access-hero,
+    .portal-access-page--animated .portal-login-panel{
+        animation:none;
+    }
+}
+
 h1,h2,h3,h4,h5,h6{
     font-family:var(--font-sans);
     letter-spacing:-0.02em;
