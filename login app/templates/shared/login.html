@@ -3,9 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>
-        {% if role == 'admin' %}Admin Login{% elif role == 'teacher' %}Teacher Login{% elif role == 'student' %}Student Login{% else %}Login{% endif %}
-    </title>
+    <title>Login</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -18,7 +16,7 @@
             <div class="portal-opening-mark">AU</div>
             <div class="portal-opening-copy">
                 <span>Attendance Portal</span>
-                <strong>Welcome to Student Protocol</strong>
+                <strong>Portal Login</strong>
             </div>
             <div class="portal-opening-track">
                 <span></span>
@@ -39,23 +37,49 @@
             <div class="eyebrow portal-access-eyebrow">
                 <i class="fa-solid fa-shield-halved"></i> Secure Attendance Portal
             </div>
-            <h1>
-                {% if role == 'admin' %}Admin{% elif role == 'teacher' %}Teacher{% elif role == 'student' %}Student{% else %}Role based{% endif %}
-                login for a focused workspace.
-            </h1>
-            <p>Use one polished login screen for admin control, teacher attendance, and student reports. Pick a desk, sign in, and continue directly into the right dashboard.</p>
+            <h1>Login for your focused workspace.</h1>
+            <p>Enter your username and password. The portal will open the right dashboard automatically.</p>
 
-            <div class="portal-access-chip-row">
-                <span>Admin Desk</span>
-                <span>Teacher Desk</span>
-                <span>Student Desk</span>
-                <span>Reports Ready</span>
+            <div class="ai-login-visual" aria-hidden="true">
+                <div class="ai-orbit">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                    <div class="ai-core">
+                        <i class="fa-solid fa-brain"></i>
+                    </div>
+                </div>
+                <div class="ai-scan-card">
+                    <div class="ai-scan-line"></div>
+                    <div class="ai-scan-row">
+                        <span></span>
+                        <strong>Identity Sync</strong>
+                    </div>
+                    <div class="ai-scan-row">
+                        <span></span>
+                        <strong>Role Detection</strong>
+                    </div>
+                    <div class="ai-scan-row">
+                        <span></span>
+                        <strong>Secure Routing</strong>
+                    </div>
+                </div>
+                <div class="ai-node-cloud">
+                    <i></i>
+                    <i></i>
+                    <i></i>
+                    <i></i>
+                    <i></i>
+                    <i></i>
+                    <i></i>
+                    <i></i>
+                </div>
             </div>
 
             <div class="portal-access-stats">
                 <div>
-                    <strong>3</strong>
-                    <span>login roles</span>
+                    <strong>1</strong>
+                    <span>login screen</span>
                 </div>
                 <div>
                     <strong>1</strong>
@@ -72,39 +96,14 @@
             <div class="portal-login-head">
                 <div>
                     <span class="portal-login-kicker">Welcome back</span>
-                    <h2>
-                        {% if role == 'admin' %}Admin Login{% elif role == 'teacher' %}Teacher Login{% elif role == 'student' %}Student Login{% else %}Portal Login{% endif %}
-                    </h2>
+                    <h2>Portal Login</h2>
                 </div>
                 <div class="portal-login-icon">
-                    <i class="fa-solid {% if role == 'admin' %}fa-user-shield{% elif role == 'teacher' %}fa-chalkboard-user{% elif role == 'student' %}fa-user-graduate{% else %}fa-users-gear{% endif %}"></i>
+                    <i class="fa-solid fa-right-to-bracket"></i>
                 </div>
-            </div>
-
-            <div class="portal-role-tabs">
-                <a href="/login?role=admin" class="{% if role == 'admin' %}is-active{% endif %}">Admin</a>
-                <a href="/login?role=teacher" class="{% if role == 'teacher' %}is-active{% endif %}">Teacher</a>
-                <a href="/login?role=student" class="{% if role == 'student' %}is-active{% endif %}">Student</a>
             </div>
 
             <form method="post" autocomplete="off" class="portal-login-form">
-                {% if role %}
-                <input type="hidden" name="role" value="{{ role }}">
-                {% else %}
-                <label>
-                    <span>Login Role</span>
-                    <div class="portal-field">
-                        <i class="fa-solid fa-users-gear"></i>
-                        <select name="role" required aria-label="Select login role">
-                            <option value="">Select desk</option>
-                            <option value="admin">Admin Desk</option>
-                            <option value="teacher">Teacher Desk</option>
-                            <option value="student">Student Desk</option>
-                        </select>
-                    </div>
-                </label>
-                {% endif %}
-
                 <label>
                     <span>Username</span>
                     <div class="portal-field">
@@ -140,18 +139,7 @@
             {% endif %}
 
             <div class="portal-login-actions">
-                {% if role == 'admin' %}
-                <a href="/forgot_password?role=admin">Forgot Password?</a>
-                <a href="/signup?role=admin">Create Account</a>
-                {% elif role == 'teacher' %}
-                <a href="/forgot_password?role=teacher">Forgot Password?</a>
-                <a href="/signup?role=teacher">Create Account</a>
-                {% elif role == 'student' %}
-                <a href="/forgot_password?role=student">Forgot Password?</a>
-                {% else %}
                 <a href="/forgot_password">Forgot Password?</a>
-                <a href="/login">All Login</a>
-                {% endif %}
             </div>
         </section>
     </main>

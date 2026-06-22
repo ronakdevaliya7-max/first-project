@@ -1564,33 +1564,28 @@ def ensure_festival_calendar(con, reset=False):
 def index():
     if "user" in session:
         return redirect_for_role(session.get("role"))
-    return handle_login("admin")
+    return handle_login()
 
 
 # LOGIN
 def handle_login(expected_role=""):
-    expected_role = normalize_login_role(expected_role)
-    selected_role = normalize_login_role(request.values.get("role")) or expected_role
     msg = ""
 
     if request.method == "POST":
         username = request.form.get("username", "").strip()
         password = request.form.get("password", "")
 
-        if not selected_role:
-            msg = "Please select admin, teacher, or student"
-        else:
-            user = authenticate_user(username, password)
-            user_role = normalize_login_role(user["role"] if user else "")
+        user = authenticate_user(username, password)
+        user_role = normalize_login_role(user["role"] if user else "")
 
-            if user and user_role == selected_role:
-                session["user"] = user["username"]
-                session["role"] = user_role or "student"
-                return redirect_for_role(session["role"])
+        if user and user_role:
+            session["user"] = user["username"]
+            session["role"] = user_role
+            return redirect_for_role(session["role"])
 
-            msg = f"Invalid {selected_role} login"
+        msg = "Invalid username or password"
 
-    return render_template("shared/login.html", msg=msg, role=selected_role)
+    return render_template("shared/login.html", msg=msg)
 
 
 @app.route("/login", methods=["GET", "POST"])
