@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="{{ url_for('static', filename='dark-mode.js') }}"></script>
 </head>
 <body class="portal-access-page portal-access-page--animated">
     <div class="portal-opening" aria-hidden="true">
@@ -22,12 +23,21 @@
                 <span></span>
             </div>
             <div class="portal-opening-grid">
-                <i></i>
-                <i></i>
-                <i></i>
-                <i></i>
-                <i></i>
-                <i></i>
+                <div>
+                    <i class="fa-solid fa-user-shield"></i>
+                    <strong>Admin</strong>
+                    <span>Control</span>
+                </div>
+                <div>
+                    <i class="fa-solid fa-chalkboard-user"></i>
+                    <strong>Teacher</strong>
+                    <span>Classes</span>
+                </div>
+                <div>
+                    <i class="fa-solid fa-user-graduate"></i>
+                    <strong>Student</strong>
+                    <span>Reports</span>
+                </div>
             </div>
         </div>
     </div>
@@ -90,6 +100,33 @@
                     <span>portal access</span>
                 </div>
             </div>
+
+            <div class="portal-role-showcase" aria-label="Role panels">
+                <a href="/admin_login" class="portal-role-card portal-role-card--admin">
+                    <span class="portal-role-icon"><i class="fa-solid fa-user-shield"></i></span>
+                    <span>
+                        <strong>Admin Panel</strong>
+                        <small>Students, teachers, reports</small>
+                    </span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </a>
+                <a href="/teacher_login" class="portal-role-card portal-role-card--teacher">
+                    <span class="portal-role-icon"><i class="fa-solid fa-chalkboard-user"></i></span>
+                    <span>
+                        <strong>Teacher Panel</strong>
+                        <small>Attendance and class work</small>
+                    </span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </a>
+                <a href="/student_login" class="portal-role-card portal-role-card--student">
+                    <span class="portal-role-icon"><i class="fa-solid fa-user-graduate"></i></span>
+                    <span>
+                        <strong>Student Panel</strong>
+                        <small>Attendance and results</small>
+                    </span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </a>
+            </div>
         </section>
 
         <section class="portal-login-panel" aria-label="Portal login">
@@ -98,8 +135,13 @@
                     <span class="portal-login-kicker">Welcome back</span>
                     <h2>Portal Login</h2>
                 </div>
-                <div class="portal-login-icon">
-                    <i class="fa-solid fa-right-to-bracket"></i>
+                <div style="display:flex; gap:12px; align-items:center;">
+                    <button type="button" class="dark-mode-toggle" onclick="toggleDarkMode()" aria-label="Toggle dark mode" style="margin:0;">
+                        <i class="fa-solid fa-moon"></i>
+                    </button>
+                    <div class="portal-login-icon">
+                        <i class="fa-solid fa-right-to-bracket"></i>
+                    </div>
                 </div>
             </div>
 
@@ -139,7 +181,10 @@
             {% endif %}
 
             <div class="portal-login-actions">
-                <a href="/forgot_password">Forgot Password?</a>
+                <a href="/forgot_password{% if login_role %}?role={{ login_role }}{% endif %}">Forgot Password?</a>
+                {% if show_signup %}
+                <a href="/signup?role={{ signup_target_role }}">Create Account</a>
+                {% endif %}
             </div>
         </section>
     </main>

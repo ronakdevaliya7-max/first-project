@@ -2,6 +2,7 @@ import io
 import sqlite3, os, time
 import csv
 from datetime import date, timedelta
+from urllib.parse import quote
 
 from flask import Flask, render_template, request, redirect, session, send_from_directory, make_response
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -10,10 +11,12 @@ from werkzeug.utils import secure_filename
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "attendance-dev-secret")
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+ASSET_VERSION = "20260707-darkmode-2"
 app.config["DATABASE_PATH"] = os.environ.get(
     "ATTENDANCE_DB_PATH",
     os.path.join(BASE_DIR, "users.db")
 )
+app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
 app.jinja_env.filters["display_date"] = lambda value: format_display_date(value)
 
 TIMETABLE_META = {
@@ -147,6 +150,44 @@ EXAM_PAGES = {
 UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+
+
+@app.after_request
+def inject_dark_mode_assets(response):
+    if response.mimetype != "text/html" or response.direct_passthrough:
+        return response
+
+    html = response.get_data(as_text=True)
+    if not html:
+        return response
+
+    html = html.replace(
+        'href="/static/style.css"',
+        f'href="/static/style.css?v={ASSET_VERSION}"'
+    )
+    html = html.replace(
+        "href='/static/style.css'",
+        f"href='/static/style.css?v={ASSET_VERSION}'"
+    )
+    html = html.replace(
+        'src="/static/dark-mode.js"',
+        f'src="/static/dark-mode.js?v={ASSET_VERSION}"'
+    )
+    html = html.replace(
+        "src='/static/dark-mode.js'",
+        f"src='/static/dark-mode.js?v={ASSET_VERSION}'"
+    )
+
+    if "dark-mode.js" not in html and "</head>" in html:
+        html = html.replace(
+            "</head>",
+            f'    <script src="/static/dark-mode.js?v={ASSET_VERSION}"></script>\n</head>',
+            1
+        )
+
+    response.set_data(html)
+    response.headers["Content-Length"] = str(len(response.get_data()))
+    return response
 
 
 # DATABASE
@@ -1570,22 +1611,47 @@ def index():
 # LOGIN
 def handle_login(expected_role=""):
     msg = ""
+    login_role = expected_role or (request.values.get("role") or "").strip().lower()
+    login_role = login_role if login_role in {"admin", "teacher", "student"} else ""
+    logout_user = (request.args.get("logout") or "").strip()
+
+    if request.method == "GET" and logout_user:
+        msg = f"{logout_user} logout successfully"
 
     if request.method == "POST":
         username = request.form.get("username", "").strip()
         password = request.form.get("password", "")
+        selected_role = normalize_login_role((request.form.get("role") or "").strip())
 
         user = authenticate_user(username, password)
         user_role = normalize_login_role(user["role"] if user else "")
 
         if user and user_role:
-            session["user"] = user["username"]
-            session["role"] = user_role
-            return redirect_for_role(session["role"])
+            if login_role and user_role != login_role:
+                msg = f"Invalid {login_role} login"
+            elif selected_role and user_role != selected_role:
+                msg = f"Invalid {selected_role} login"
+            else:
+                session["user"] = user["username"]
+                session["role"] = user_role
+                return redirect_for_role(session["role"])
+        else:
+            if login_role:
+                msg = f"Invalid {login_role} login"
+            elif selected_role:
+                msg = f"Invalid {selected_role} login"
+            else:
+                msg = "Invalid username or password"
 
-        msg = "Invalid username or password"
-
-    return render_template("shared/login.html", msg=msg)
+    show_signup = login_role != "student"
+    signup_target_role = login_role or "student"
+    return render_template(
+        "shared/login.html",
+        msg=msg,
+        login_role=login_role,
+        show_signup=show_signup,
+        signup_target_role=signup_target_role,
+    )
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -4452,6 +4518,7 @@ def export_attendance(id):
     response.headers["Content-Disposition"] = (
         f'attachment; filename="attendance_report_{student["username"]}.csv"'
     )
+    
     return response
 
 
@@ -4993,10 +5060,11 @@ def delete_teacher_notification(notification_id):
 # LOGOUT
 @app.route("/logout")
 def logout():
+    username = session.get("user", "User")
 
     session.clear()
 
-    return redirect("/")
+    return redirect(f"/?logout={quote(username)}")
 
 
 if __name__=="__main__":

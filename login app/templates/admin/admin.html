@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="{{ url_for('static', filename='dark-mode.js') }}"></script>
 </head>
 <body>
     <div class="app-layout">
@@ -21,6 +22,9 @@
                     <input type="text" placeholder="Search students, teachers, or reports">
                 </div>
                 <div class="topbar-actions">
+                    <button class="dark-mode-toggle" onclick="toggleDarkMode()" aria-label="Toggle dark mode">
+                        <i class="fa-solid fa-moon"></i>
+                    </button>
                     <div class="topbar-chip"><i class="fa-regular fa-user"></i> {{ admin_user.username if admin_user else "Admin" }}</div>
                 </div>
             </div>

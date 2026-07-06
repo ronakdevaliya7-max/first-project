@@ -9,8 +9,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="{{ url_for('static', filename='dark-mode.js') }}"></script>
 </head>
-<body>
+<body class="teacher-dashboard-page">
     <div class="app-layout">
         <aside class="app-sidebar">
             <div class="app-brand">
@@ -88,6 +89,9 @@
                         <label for="teacher-dashboard-date" class="topbar-date-label">Dashboard Date</label>
                         <input id="teacher-dashboard-date" type="date" name="date" value="{{ selected_date }}" onchange="this.form.submit()">
                     </form>
+                    <button class="dark-mode-toggle" onclick="toggleDarkMode()" aria-label="Toggle dark mode">
+                        <i class="fa-solid fa-moon"></i>
+                    </button>
                     <a href="/timetable" class="topbar-chip" data-search-target data-search-text="timetable calendar lecture schedule time table"><i class="fa-regular fa-calendar"></i> Timetable</a>
                     <a href="/home" class="topbar-chip" data-search-target data-search-text="{{ user.username|lower }} teacher profile home account"><i class="fa-regular fa-user"></i> {{ user.username }}</a>
                 </div>
@@ -95,6 +99,21 @@
 
             <section class="teacher-hero-grid">
                 <section class="dashboard-hero" data-search-target data-search-text="teacher panel welcome {{ user.username|lower }} lecture attendance daily attendance timetable weekly report">
+                    <div class="teacher-pro-visual" aria-hidden="true">
+                        <div class="teacher-pro-orbit">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                            <div class="teacher-pro-core">
+                                <i class="fa-solid fa-chalkboard-user"></i>
+                            </div>
+                        </div>
+                        <div class="teacher-pro-console">
+                            <div><span></span> Attendance sync</div>
+                            <div><span></span> Class insight</div>
+                            <div><span></span> Report engine</div>
+                        </div>
+                    </div>
                     <div class="section-title" style="color:#fde68a;">Teacher Panel</div>
                     <h1 style="margin:0;">Welcome {{ user.username }}</h1>
                     <p>Track {{ today_classes }} classes on {{ selected_date|display_date }}, monitor {{ lecture_flow_percent }}% lecture flow, and review {{ weekly_rows }} entries from the latest 7-day window.</p>
@@ -108,6 +127,20 @@
                         <a href="/attendance" class="secondary-link">Daily Attendance</a>
                         <a href="/teacher_attendance_report" class="secondary-link">Teacher Report</a>
                         <a href="/timetable" class="secondary-link">Open Timetable</a>
+                    </div>
+                    <div class="teacher-pro-strip">
+                        <a href="/teacher_students_by_class">
+                            <i class="fa-solid fa-layer-group"></i>
+                            <span>Class Wise</span>
+                        </a>
+                        <a href="/teacher_notifications">
+                            <i class="fa-solid fa-bell"></i>
+                            <span>Notify Class</span>
+                        </a>
+                        <a href="/teacher_cia_marks">
+                            <i class="fa-solid fa-clipboard-list"></i>
+                            <span>Marks Entry</span>
+                        </a>
                     </div>
                 </section>
 

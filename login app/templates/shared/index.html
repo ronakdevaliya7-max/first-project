@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="{{ url_for('static', filename='dark-mode.js') }}"></script>
 </head>
 <body class="landing-page">
     <div class="portal-opening" aria-hidden="true">
@@ -87,6 +88,9 @@
                         <span class="hero-chip">Timetable Ready</span>
                     </div>
                     <div class="action-row landing-action-row">
+                        <button type="button" class="dark-mode-toggle" onclick="toggleDarkMode()" aria-label="Toggle dark mode" style="position:fixed; top:24px; right:24px; z-index:100;">
+                            <i class="fa-solid fa-moon"></i>
+                        </button>
                         <a href="/login?role=admin" class="primary-link"><i class="fa-solid fa-user-shield"></i> Open Admin Desk</a>
                         <a href="/login?role=teacher" class="secondary-link"><i class="fa-solid fa-chalkboard-user"></i> Enter Teacher Desk</a>
                         <a href="/login?role=student" class="secondary-link"><i class="fa-solid fa-user-graduate"></i> Enter Student Desk</a>

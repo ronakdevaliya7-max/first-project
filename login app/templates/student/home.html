@@ -9,8 +9,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="{{ url_for('static', filename='dark-mode.js') }}"></script>
 </head>
-<body>
+<body class="student-dashboard-page">
     <div class="app-layout">
         {% include "student/_sidebar.html" %}
 
@@ -21,6 +22,9 @@
                     <input type="text" placeholder="Search attendance, leave, or timetable">
                 </div>
                 <div class="topbar-actions">
+                    <button class="dark-mode-toggle" onclick="toggleDarkMode()" aria-label="Toggle dark mode">
+                        <i class="fa-solid fa-moon"></i>
+                    </button>
                     <div class="topbar-chip"><i class="fa-regular fa-id-badge"></i> {{ user.enroll or 'Pending' }}</div>
                     <div class="topbar-chip"><i class="fa-regular fa-user"></i> {{ user.username }}</div>
                 </div>
@@ -29,6 +33,21 @@
             <section class="dashboard-hero student-hero-shell">
                 <div class="student-hero-grid">
                     <div>
+                        <div class="student-pro-visual" aria-hidden="true">
+                            <div class="student-pro-orbit">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                                <div class="student-pro-core">
+                                    <i class="fa-solid fa-user-graduate"></i>
+                                </div>
+                            </div>
+                            <div class="student-pro-console">
+                                <div><span></span> Attendance watch</div>
+                                <div><span></span> Leave tracking</div>
+                                <div><span></span> Result ready</div>
+                            </div>
+                        </div>
                         <div class="section-title" style="color:#fde68a;">Student Workspace</div>
                         <h1 style="margin:0;">Welcome {{ user.username }}</h1>
                         <p>Track your attendance, watch leave approvals, and stay ready for the next lectures from one student desk.</p>
@@ -42,6 +61,20 @@
                             <a href="/student_leave" class="secondary-link">Apply Leave</a>
                             <a href="/timetable" class="secondary-link">Open Timetable</a>
                             <a href="/weekly_attendance" class="secondary-link">Weekly Report</a>
+                        </div>
+                        <div class="student-pro-strip">
+                            <a href="/student_result">
+                                <i class="fa-solid fa-square-poll-vertical"></i>
+                                <span>Result</span>
+                            </a>
+                            <a href="/fee_circular">
+                                <i class="fa-solid fa-receipt"></i>
+                                <span>Fee Status</span>
+                            </a>
+                            <a href="/festivals">
+                                <i class="fa-solid fa-star"></i>
+                                <span>Announcements</span>
+                            </a>
                         </div>
                     </div>
 
